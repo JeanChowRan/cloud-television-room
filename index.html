@@ -63,12 +63,49 @@
 
   .main{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;min-width:0}
 
+  /* 视频列（含房主换源栏 + 播放器） */
+  .player-col{flex:0 0 auto;display:flex;flex-direction:column;min-width:0;min-height:0}
+
+  .host-bar{
+    display:flex;gap:8px;align-items:center;flex:0 0 auto;
+    padding:8px 10px;background:var(--panel2);border-bottom:1px solid var(--line);
+  }
+  .host-bar .tag{
+    font-size:11px;color:var(--accent);border:1px solid rgba(76,139,245,.45);
+    border-radius:6px;padding:2px 6px;flex:0 0 auto;letter-spacing:.5px;
+  }
+  .host-bar input{
+    flex:1 1 auto;min-width:0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);
+    background:#11141b;color:var(--text);font-size:13px;outline:none;
+  }
+  .host-bar input:focus{border-color:var(--accent)}
+  .host-bar button{
+    flex:0 0 auto;padding:9px 14px;border:0;border-radius:8px;
+    background:var(--accent);color:#fff;font-size:13px;font-weight:600;
+  }
+  .host-bar button:hover{background:var(--accent2)}
+
   .player-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;flex:0 0 auto;overflow:hidden}
   .player-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000}
   .placeholder{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     color:#4d5568;font-size:14px;background:#000;pointer-events:none;
   }
+
+  /* 全屏按钮 */
+  .fs-btn{
+    position:absolute;top:10px;right:10px;z-index:5;
+    width:38px;height:38px;border:0;border-radius:9px;
+    background:rgba(15,17,21,.6);color:#fff;font-size:17px;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
+    opacity:.72;transition:opacity .18s,background .18s;
+  }
+  .fs-btn:hover{opacity:1;background:rgba(15,17,21,.92)}
+
+  /* 播放器全屏时铺满 */
+  .player-wrap:fullscreen{aspect-ratio:auto;width:100%;height:100%;flex:none;max-height:none}
+  .player-wrap:-webkit-full-screen{aspect-ratio:auto;width:100%;height:100%;flex:none;max-height:none}
 
   .chat{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:var(--panel);border-top:1px solid var(--line)}
   .chat-head{display:none;padding:9px 12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);flex:0 0 auto}
@@ -99,10 +136,16 @@
   .chat-input button{padding:0 16px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:600}
   .chat-input button:disabled{opacity:.5}
 
+  /* 竖屏时限制视频高度，给聊天留出空间 */
+  @media (max-aspect-ratio:1/1){
+    .player-wrap{max-height:46vh}
+  }
+
   /* ---------- 横屏：右侧聊天 ---------- */
   @media (min-aspect-ratio:1/1) and (min-width:560px){
     .main{flex-direction:row}
-    .player-wrap{flex:1 1 auto;width:auto;height:100%;aspect-ratio:auto;min-width:0}
+    .player-col{flex:1 1 auto;height:100%;min-width:0}
+    .player-wrap{flex:1 1 auto;width:100%;height:auto;aspect-ratio:auto;max-height:none}
     .chat{width:340px;flex:0 0 340px;border-top:0;border-left:1px solid var(--line)}
     .chat-head{display:block}
   }
@@ -111,6 +154,7 @@
     position:fixed;left:50%;bottom:36px;transform:translate(-50%,12px);
     background:rgba(45,51,68,.96);color:#fff;padding:10px 18px;border-radius:10px;
     font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:99;
+    max-width:80vw;text-align:center;
   }
   .toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
@@ -164,10 +208,21 @@
   </header>
 
   <div class="main">
-    <div class="player-wrap">
-      <iframe id="player" title="视频" allowfullscreen
-        allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write"></iframe>
-      <div id="playerPlaceholder" class="placeholder">等待视频…</div>
+    <!-- 视频列 -->
+    <div class="player-col">
+      <!-- 房主专属：换源栏（视频上方） -->
+      <div id="hostBar" class="host-bar hidden">
+        <span class="tag">房主</span>
+        <input id="urlEdit" type="text" placeholder="换视频链接，回车同步给所有人…" spellcheck="false">
+        <button id="applyUrlBtn" type="button">同步</button>
+      </div>
+
+      <div class="player-wrap" id="playerWrap">
+        <iframe id="player" title="视频" allowfullscreen
+          allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write"></iframe>
+        <div id="playerPlaceholder" class="placeholder">等待视频…</div>
+        <button id="fsBtn" class="fs-btn" type="button" title="全屏">⛶</button>
+      </div>
     </div>
 
     <aside class="chat">
@@ -190,7 +245,7 @@
   // 如需自建信令服务器，改成：
   // { host:'your.server', port:443, path:'/peerjs', secure:true, debug:1 }
   var PEER_OPTS = { debug: 1 };
-  var PREFIX = 'tvparty-v1-';   // peer id 前缀，避免和公共服务器上其他人撞名
+  var PREFIX = 'tvparty-v1-';   // peer id 前缀，避免撞名
 
   /* ============ 状态 ============ */
   var state = {
@@ -239,13 +294,14 @@
     setTimeout(function () {
       el.classList.remove('show');
       setTimeout(function () { el.remove(); }, 300);
-    }, 1500);
+    }, 1600);
   }
   // 从粘贴内容里提取真正的 URL（兼容 iframe 代码）
   function extractUrl(raw) {
     var m = String(raw).match(/src\s*=\s*["']([^"']+)["']/i);
     return (m ? m[1] : String(raw)).trim();
   }
+  function validUrl(url) { return /^https?:\/\//i.test(url); }
 
   /* ============ 界面：大厅 ============ */
   document.querySelectorAll('.tab').forEach(function (btn) {
@@ -259,7 +315,6 @@
     });
   });
 
-  // 恢复昵称 / 邀请链接里的房号
   var savedNick = localStorage.getItem('tvparty_nick');
   if (savedNick) $('#nickInput').value = savedNick;
 
@@ -281,7 +336,7 @@
     var nick = ($('#nickInput').value.trim() || '房主').slice(0, 12);
     var url = extractUrl($('#urlInput').value);
     if (!url) { showMsg('请填写视频链接', true); return; }
-    if (!/^https?:\/\//i.test(url)) { showMsg('链接需要以 http:// 或 https:// 开头', true); return; }
+    if (!validUrl(url)) { showMsg('链接需要以 http:// 或 https:// 开头', true); return; }
 
     localStorage.setItem('tvparty_nick', nick);
     state.nick = nick;
@@ -313,7 +368,7 @@
         startHost();
         return;
       }
-      setLobbyBusy(false, '连接失败：' + ((err && (err.type || err.message)) || '未知错误'), true);
+      setLobbyBusy(false);
       showMsg('连接失败：' + ((err && (err.type || err.message)) || '未知错误'), true);
       state.isHost = false;
     });
@@ -401,6 +456,14 @@
     showScreen('room');
     $('#roomIdText').textContent = state.roomId;
 
+    // 房主：显示换源栏，并把当前链接填进去
+    if (state.isHost) {
+      $('#hostBar').classList.remove('hidden');
+      $('#urlEdit').value = state.url;
+    } else {
+      $('#hostBar').classList.add('hidden');
+    }
+
     if (state.url) setPlayer(state.url);
     renderMembers();
 
@@ -446,7 +509,7 @@
       var nick = String(data.nick || '匿名').slice(0, 12);
       state.members.set(conn.peer, nick);
 
-      // 关键：把房主创建房间时填的视频链接下发
+      // 关键：把房主当前的视频链接下发给新加入的人
       safeSend(conn, {
         type: 'welcome',
         url: state.url,
@@ -479,11 +542,22 @@
 
     if (data.type === 'chat') {
       addChat(data.nick || '匿名', String(data.text || ''), data.ts, false);
+
     } else if (data.type === 'system') {
       addSystem(String(data.text || ''));
+
     } else if (data.type === 'members' && Array.isArray(data.members)) {
       state.members = new Map(data.members.map(function (m) { return [m.id, m.nick]; }));
       renderMembers();
+
+    } else if (data.type === 'url') {
+      // 房主换了视频源，本机同步
+      var u = String(data.url || '');
+      if (u && u !== state.url) {
+        state.url = u;
+        setPlayer(u);
+        addSystem('房主切换了视频');
+      }
     }
   }
 
@@ -509,6 +583,95 @@
     state.members.forEach(function (nick, id) { out.push({ id: id, nick: nick }); });
     return out;
   }
+
+  /* ============ 房主：切换视频源并同步 ============ */
+  function applyUrlChange() {
+    if (!state.isHost) return;
+    var url = extractUrl($('#urlEdit').value);
+    if (!url) { toast('请填写视频链接'); return; }
+    if (!validUrl(url)) { toast('链接需以 http:// 或 https:// 开头'); return; }
+    if (url === state.url) { toast('链接没有变化'); return; }
+
+    state.url = url;
+    $('#urlEdit').value = url;
+    setPlayer(url);
+
+    // 同步给所有客户端
+    broadcast({ type: 'url', url: url, by: state.nick });
+
+    addSystem('已切换视频源');
+    toast('已同步给房间内所有人');
+  }
+
+  $('#applyUrlBtn').addEventListener('click', applyUrlChange);
+  $('#urlEdit').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') { e.preventDefault(); applyUrlChange(); }
+  });
+
+  /* ============ 全屏 ============ */
+  var playerWrap = $('#playerWrap');
+  var fsBtn = $('#fsBtn');
+
+  // 检测浏览器是否支持元素全屏（iOS 上的 Safari 不支持）
+  var supportsFs = !!(playerWrap.requestFullscreen ||
+                      playerWrap.webkitRequestFullscreen ||
+                      playerWrap.msRequestFullscreen);
+  if (!supportsFs) fsBtn.classList.add('hidden');
+
+  function fullscreenEl() {
+    return document.fullscreenElement ||
+           document.webkitFullscreenElement ||
+           document.msFullscreenElement ||
+           null;
+  }
+
+  function updateFsBtn() {
+    var isFs = fullscreenEl() === playerWrap;
+    fsBtn.textContent = isFs ? '⤡' : '⛶';
+    fsBtn.title = isFs ? '退出全屏' : '全屏';
+  }
+
+  function toggleFullscreen() {
+    if (!supportsFs) { toast('当前浏览器不支持全屏'); return; }
+
+    if (fullscreenEl()) {
+      var exit = document.exitFullscreen ||
+                 document.webkitExitFullscreen ||
+                 document.msExitFullscreen;
+      if (exit) { try { exit.call(document); } catch (e) {} }
+      return;
+    }
+
+    var req = playerWrap.requestFullscreen ||
+              playerWrap.webkitRequestFullscreen ||
+              playerWrap.msRequestFullscreen;
+    if (!req) { toast('当前浏览器不支持全屏'); return; }
+
+    try {
+      var p = req.call(playerWrap);
+      if (p && typeof p.catch === 'function') {
+        p.catch(function () { toast('无法进入全屏'); });
+      }
+    } catch (e) {
+      toast('无法进入全屏');
+    }
+  }
+
+  fsBtn.addEventListener('click', toggleFullscreen);
+
+  ['fullscreenchange', 'webkitfullscreenchange', 'MSFullscreenChange'].forEach(function (ev) {
+    document.addEventListener(ev, updateFsBtn);
+  });
+
+  // 键盘快捷键：F 全屏（输入框里不触发）
+  document.addEventListener('keydown', function (e) {
+    var tag = (e.target && e.target.tagName) || '';
+    if (tag === 'INPUT' || tag === 'TEXTAREA') return;
+    if ((e.key === 'f' || e.key === 'F') && state.connected) {
+      e.preventDefault();
+      toggleFullscreen();
+    }
+  });
 
   /* ============ 聊天 UI ============ */
   $('#chatForm').addEventListener('submit', function (e) {
@@ -602,6 +765,12 @@
   function teardown() {
     state.connected = false;
 
+    // 若处于全屏，先退出
+    if (fullscreenEl()) {
+      var exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+      if (exit) { try { exit.call(document); } catch (e) {} }
+    }
+
     if (state.hostConn) {
       try { state.hostConn.close(); } catch (e) {}
       state.hostConn = null;
@@ -626,6 +795,8 @@
     $('#chatInput').disabled = false;
     $('#chatForm').querySelector('button').disabled = false;
     $('#roomIdText').textContent = '------';
+    $('#hostBar').classList.add('hidden');
+    $('#urlEdit').value = '';
     renderMembers();
   }
 
