@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<title>一起看 · P2P 观影房</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e2230; --line:#2a2f3d;
+    --text:#e8eaed; --muted:#8b93a7; --accent:#4c8bf5; --accent2:#2f6fe0;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0}
+  body{
+    font-family:system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;
+    overflow:hidden;
+  }
+  button{font-family:inherit;cursor:pointer}
+  input{font-family:inherit}
+  .hidden{display:none !important}
+
+  /* ---------- 大厅 ---------- */
+  #lobby{height:100vh;height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow:auto}
+  .card{width:100%;max-width:430px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
+  .card h1{margin:0 0 4px;font-size:24px;letter-spacing:.5px}
+  .sub{margin:0 0 6px;color:var(--muted);font-size:13px}
+  label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
+  input[type=text]{
+    width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);
+    background:#11141b;color:var(--text);font-size:15px;outline:none;transition:border-color .15s;
+  }
+  input[type=text]:focus{border-color:var(--accent)}
+  .tabs{display:flex;gap:6px;margin-top:20px;background:#11141b;padding:4px;border-radius:10px}
+  .tab{flex:1;padding:9px;border:0;border-radius:8px;background:transparent;color:var(--muted);font-size:14px;transition:.15s}
+  .tab.active{background:var(--panel2);color:var(--text)}
+  .pane{margin-top:16px}
+  button.primary{
+    width:100%;margin-top:18px;padding:13px;border:0;border-radius:10px;
+    background:var(--accent);color:#fff;font-size:15px;font-weight:600;transition:.15s;
+  }
+  button.primary:hover:not(:disabled){background:var(--accent2)}
+  button.primary:disabled{opacity:.55;cursor:default}
+  .hint{font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.6}
+  .status{font-size:13px;color:var(--muted);margin:14px 0 0;min-height:18px;line-height:1.5}
+  .status.error{color:#ff6b6b}
+
+  /* ---------- 房间 ---------- */
+  #room{height:100vh;height:100dvh;display:flex;flex-direction:column}
+
+  .topbar{
+    display:flex;align-items:center;justify-content:space-between;gap:8px;
+    padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));
+    background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto;
+  }
+  .room-id{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+  .room-id strong{color:var(--text);font-size:16px;letter-spacing:2px;font-variant-numeric:tabular-nums}
+  .topbar-right{display:flex;align-items:center;gap:8px}
+  .ghost{background:transparent;border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:12px;transition:.15s}
+  .ghost:hover{color:var(--text);border-color:#3a4152}
+  .badge{background:var(--panel2);color:var(--muted);font-size:12px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+
+  .main{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;min-width:0}
+
+  .player-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;flex:0 0 auto;overflow:hidden}
+  .player-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000}
+  .placeholder{
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    color:#4d5568;font-size:14px;background:#000;pointer-events:none;
+  }
+
+  .chat{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:var(--panel);border-top:1px solid var(--line)}
+  .chat-head{display:none;padding:9px 12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);flex:0 0 auto}
+  .messages{
+    flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px;
+    display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain;
+  }
+  .msg{display:flex;flex-direction:column;align-items:flex-start;max-width:88%;align-self:flex-start}
+  .msg.self{align-self:flex-end;align-items:flex-end}
+  .msg .meta{font-size:11px;color:var(--muted);margin-bottom:3px}
+  .msg .body{
+    background:var(--panel2);padding:8px 12px;border-radius:12px;
+    font-size:14px;line-height:1.5;word-break:break-word;white-space:pre-wrap;
+  }
+  .msg.self .body{background:var(--accent);color:#fff}
+  .sys{align-self:center;font-size:12px;color:var(--muted);text-align:center;max-width:92%;line-height:1.5}
+
+  .chat-input{
+    flex:0 0 auto;display:flex;gap:8px;padding:10px;
+    padding-bottom:max(10px,env(safe-area-inset-bottom));
+    border-top:1px solid var(--line);background:var(--panel);
+  }
+  .chat-input input{
+    flex:1;min-width:0;padding:11px 12px;border-radius:10px;border:1px solid var(--line);
+    background:#11141b;color:var(--text);font-size:16px;outline:none;
+  }
+  .chat-input input:focus{border-color:var(--accent)}
+  .chat-input button{padding:0 16px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:600}
+  .chat-input button:disabled{opacity:.5}
+
+  /* ---------- 横屏：右侧聊天 ---------- */
+  @media (min-aspect-ratio:1/1) and (min-width:560px){
+    .main{flex-direction:row}
+    .player-wrap{flex:1 1 auto;width:auto;height:100%;aspect-ratio:auto;min-width:0}
+    .chat{width:340px;flex:0 0 340px;border-top:0;border-left:1px solid var(--line)}
+    .chat-head{display:block}
+  }
+
+  .toast{
+    position:fixed;left:50%;bottom:36px;transform:translate(-50%,12px);
+    background:rgba(45,51,68,.96);color:#fff;padding:10px 18px;border-radius:10px;
+    font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:99;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+
+<!-- ===================== 大厅 ===================== -->
+<div id="lobby">
+  <div class="card">
+    <h1>📺 一起看</h1>
+    <p class="sub">P2P 观影房 · 浏览器直连 · 无需注册</p>
+
+    <label for="nickInput">你的昵称</label>
+    <input id="nickInput" type="text" maxlength="12" placeholder="给自己起个名字" autocomplete="nickname">
+
+    <div class="tabs">
+      <button class="tab active" data-tab="create" type="button">创建房间</button>
+      <button class="tab" data-tab="join" type="button">加入房间</button>
+    </div>
+
+    <div id="createPane" class="pane">
+      <label for="urlInput">视频链接</label>
+      <input id="urlInput" type="text" placeholder="https://example.com/play/12345">
+      <p class="hint">填播放页地址，也可以直接粘贴 <code>&lt;iframe src="…"&gt;</code> 代码。<br>
+        注意：部分网站禁止被嵌入（会显示空白），请选用允许 iframe 的地址。</p>
+      <button id="createBtn" class="primary" type="button">创建房间</button>
+    </div>
+
+    <div id="joinPane" class="pane hidden">
+      <label for="roomInput">房间号</label>
+      <input id="roomInput" type="text" inputmode="numeric" maxlength="6" placeholder="6 位数字">
+      <button id="joinBtn" class="primary" type="button">加入房间</button>
+    </div>
+
+    <p id="lobbyMsg" class="status"></p>
+  </div>
+</div>
+
+<!-- ===================== 房间 ===================== -->
+<div id="room" class="hidden">
+  <header class="topbar">
+    <div class="room-id">
+      <span>房间</span>
+      <strong id="roomIdText">------</strong>
+      <button id="copyBtn" class="ghost" type="button">复制</button>
+    </div>
+    <div class="topbar-right">
+      <span id="memberCount" class="badge">1 人</span>
+      <button id="leaveBtn" class="ghost" type="button">退出</button>
+    </div>
+  </header>
+
+  <div class="main">
+    <div class="player-wrap">
+      <iframe id="player" title="视频" allowfullscreen
+        allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write"></iframe>
+      <div id="playerPlaceholder" class="placeholder">等待视频…</div>
+    </div>
+
+    <aside class="chat">
+      <div class="chat-head">聊天</div>
+      <div id="messages" class="messages"></div>
+      <form id="chatForm" class="chat-input" autocomplete="off">
+        <input id="chatInput" type="text" maxlength="500" placeholder="说点什么…">
+        <button type="submit">发送</button>
+      </form>
+    </aside>
+  </div>
+</div>
+
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  /* ============ 配置 ============ */
+  // 如需自建信令服务器，改成：
+  // { host:'your.server', port:443, path:'/peerjs', secure:true, debug:1 }
+  var PEER_OPTS = { debug: 1 };
+  var PREFIX = 'tvparty-v1-';   // peer id 前缀，避免和公共服务器上其他人撞名
+
+  /* ============ 状态 ============ */
+  var state = {
+    peer: null,
+    isHost: false,
+    connected: false,
+    roomId: '',
+    nick: '',
+    url: '',
+    hostConn: null,          // 访客 -> 房主
+    conns: new Map(),        // 房主: peerId -> DataConnection
+    members: new Map()       // peerId -> nick
+  };
+
+  var hostRetries = 0;
+
+  /* ============ 小工具 ============ */
+  function $(s) { return document.querySelector(s); }
+  function randomRoomId() { return String(Math.floor(100000 + Math.random() * 900000)); }
+  function peerIdForRoom(id) { return PREFIX + id + '-host'; }
+  function pad2(n) { return (n < 10 ? '0' : '') + n; }
+  function fmtTime(ts) {
+    var d = new Date(ts || Date.now());
+    return pad2(d.getHours()) + ':' + pad2(d.getMinutes());
+  }
+  function showMsg(text, isError) {
+    var el = $('#lobbyMsg');
+    el.textContent = text || '';
+    el.classList.toggle('error', !!isError);
+  }
+  function setLobbyBusy(busy, text) {
+    $('#createBtn').disabled = busy;
+    $('#joinBtn').disabled = busy;
+    if (text !== undefined) showMsg(text, false);
+  }
+  function showScreen(name) {
+    $('#lobby').classList.toggle('hidden', name !== 'lobby');
+    $('#room').classList.toggle('hidden', name !== 'room');
+  }
+  function toast(text) {
+    var el = document.createElement('div');
+    el.className = 'toast';
+    el.textContent = text;
+    document.body.appendChild(el);
+    requestAnimationFrame(function () { el.classList.add('show'); });
+    setTimeout(function () {
+      el.classList.remove('show');
+      setTimeout(function () { el.remove(); }, 300);
+    }, 1500);
+  }
+  // 从粘贴内容里提取真正的 URL（兼容 iframe 代码）
+  function extractUrl(raw) {
+    var m = String(raw).match(/src\s*=\s*["']([^"']+)["']/i);
+    return (m ? m[1] : String(raw)).trim();
+  }
+
+  /* ============ 界面：大厅 ============ */
+  document.querySelectorAll('.tab').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.tab').forEach(function (b) {
+        b.classList.toggle('active', b === btn);
+      });
+      $('#createPane').classList.toggle('hidden', btn.dataset.tab !== 'create');
+      $('#joinPane').classList.toggle('hidden', btn.dataset.tab !== 'join');
+      showMsg('');
+    });
+  });
+
+  // 恢复昵称 / 邀请链接里的房号
+  var savedNick = localStorage.getItem('tvparty_nick');
+  if (savedNick) $('#nickInput').value = savedNick;
+
+  var hashRoom = (location.hash.match(/room=(\d{6})/) || [])[1];
+  if (hashRoom) {
+    document.querySelector('.tab[data-tab="join"]').click();
+    $('#roomInput').value = hashRoom;
+  }
+
+  $('#createBtn').addEventListener('click', createRoom);
+  $('#joinBtn').addEventListener('click', joinRoom);
+  $('#urlInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') createRoom(); });
+  $('#roomInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') joinRoom(); });
+
+  /* ============ 创建房间（成为房主） ============ */
+  function createRoom() {
+    if (typeof Peer === 'undefined') { showMsg('PeerJS 加载失败，请检查网络', true); return; }
+
+    var nick = ($('#nickInput').value.trim() || '房主').slice(0, 12);
+    var url = extractUrl($('#urlInput').value);
+    if (!url) { showMsg('请填写视频链接', true); return; }
+    if (!/^https?:\/\//i.test(url)) { showMsg('链接需要以 http:// 或 https:// 开头', true); return; }
+
+    localStorage.setItem('tvparty_nick', nick);
+    state.nick = nick;
+    state.url = url;
+    state.isHost = true;
+    hostRetries = 0;
+
+    setLobbyBusy(true, '正在创建房间…');
+    startHost();
+  }
+
+  function startHost() {
+    state.roomId = randomRoomId();
+    var peer = new Peer(peerIdForRoom(state.roomId), PEER_OPTS);
+    state.peer = peer;
+
+    peer.on('open', function () {
+      hostRetries = 0;
+      state.members.set(peer.id, state.nick);
+      enterRoom();
+    });
+
+    peer.on('connection', onHostConnection);
+
+    peer.on('error', function (err) {
+      if (err && err.type === 'unavailable-id' && hostRetries < 5) {
+        hostRetries++;
+        try { peer.destroy(); } catch (e) {}
+        startHost();
+        return;
+      }
+      setLobbyBusy(false, '连接失败：' + ((err && (err.type || err.message)) || '未知错误'), true);
+      showMsg('连接失败：' + ((err && (err.type || err.message)) || '未知错误'), true);
+      state.isHost = false;
+    });
+
+    peer.on('disconnected', function () {
+      try { peer.reconnect(); } catch (e) {}
+    });
+  }
+
+  /* ============ 加入房间（访客） ============ */
+  function joinRoom() {
+    if (typeof Peer === 'undefined') { showMsg('PeerJS 加载失败，请检查网络', true); return; }
+
+    var nick = ($('#nickInput').value.trim() || '访客').slice(0, 12);
+    var roomId = $('#roomInput').value.trim();
+    if (!/^\d{6}$/.test(roomId)) { showMsg('请输入 6 位数字房间号', true); return; }
+
+    localStorage.setItem('tvparty_nick', nick);
+    state.nick = nick;
+    state.roomId = roomId;
+
+    setLobbyBusy(true, '正在连接房间 ' + roomId + ' …');
+
+    var peer = new Peer(PEER_OPTS);
+    state.peer = peer;
+    var settled = false;
+
+    function fail(msg) {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      setLobbyBusy(false);
+      showMsg(msg, true);
+      state.roomId = '';
+      try { peer.destroy(); } catch (e) {}
+      state.peer = null;
+    }
+
+    var timer = setTimeout(function () {
+      fail('连接超时，请确认房号是否正确、房主是否在线');
+    }, 15000);
+
+    peer.on('open', function () {
+      var conn = peer.connect(peerIdForRoom(roomId), { reliable: true });
+      state.hostConn = conn;
+
+      conn.on('open', function () {
+        conn.send({ type: 'hello', nick: nick });
+      });
+
+      conn.on('data', function (data) {
+        if (data && data.type === 'welcome') {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          state.url = data.url || '';
+          state.members = new Map((data.members || []).map(function (m) { return [m.id, m.nick]; }));
+          setLobbyBusy(false);
+          enterRoom();
+        }
+        handleGuestData(data);
+      });
+
+      conn.on('close', function () {
+        if (state.connected) onHostLost();
+      });
+
+      conn.on('error', function () {});
+    });
+
+    peer.on('error', function (err) {
+      var t = err && err.type;
+      if (t === 'peer-unavailable') fail('房间不存在，或房主已离线');
+      else fail('连接失败：' + (t || (err && err.message) || '未知错误'));
+    });
+
+    peer.on('disconnected', function () {
+      try { peer.reconnect(); } catch (e) {}
+    });
+  }
+
+  /* ============ 进入房间 ============ */
+  function enterRoom() {
+    state.connected = true;
+    showScreen('room');
+    $('#roomIdText').textContent = state.roomId;
+
+    if (state.url) setPlayer(state.url);
+    renderMembers();
+
+    addSystem(state.isHost
+      ? '房间已创建，把房号发给朋友，一起看吧～'
+      : '已加入房间');
+
+    if (window.innerWidth > 720) $('#chatInput').focus();
+  }
+
+  function setPlayer(url) {
+    $('#playerPlaceholder').classList.add('hidden');
+    $('#player').src = url;
+  }
+
+  /* ============ 房主：连接管理 ============ */
+  function onHostConnection(conn) {
+    conn.on('open', function () {
+      state.conns.set(conn.peer, conn);
+    });
+
+    conn.on('data', function (data) { handleHostData(conn, data); });
+
+    conn.on('close', function () {
+      var nick = state.members.get(conn.peer);
+      state.conns.delete(conn.peer);
+      state.members.delete(conn.peer);
+      if (nick) {
+        addSystem(nick + ' 离开了房间');
+        broadcast({ type: 'system', text: nick + ' 离开了房间' });
+      }
+      broadcast({ type: 'members', members: memberList() });
+      renderMembers();
+    });
+
+    conn.on('error', function () {});
+  }
+
+  function handleHostData(conn, data) {
+    if (!data || typeof data !== 'object') return;
+
+    if (data.type === 'hello') {
+      var nick = String(data.nick || '匿名').slice(0, 12);
+      state.members.set(conn.peer, nick);
+
+      // 关键：把房主创建房间时填的视频链接下发
+      safeSend(conn, {
+        type: 'welcome',
+        url: state.url,
+        roomId: state.roomId,
+        hostNick: state.nick,
+        members: memberList()
+      });
+
+      addSystem(nick + ' 加入了房间');
+      broadcast({ type: 'system', text: nick + ' 加入了房间' }, conn.peer);
+      broadcast({ type: 'members', members: memberList() });
+      renderMembers();
+      return;
+    }
+
+    if (data.type === 'chat') {
+      var senderNick = state.members.get(conn.peer) || '匿名';
+      var text = String(data.text == null ? '' : data.text).slice(0, 500).trim();
+      if (!text) return;
+      var ts = Date.now();
+      addChat(senderNick, text, ts, false);
+      broadcast({ type: 'chat', nick: senderNick, text: text, ts: ts }, conn.peer);
+      return;
+    }
+  }
+
+  /* ============ 访客：接收房主消息 ============ */
+  function handleGuestData(data) {
+    if (!data || typeof data !== 'object') return;
+
+    if (data.type === 'chat') {
+      addChat(data.nick || '匿名', String(data.text || ''), data.ts, false);
+    } else if (data.type === 'system') {
+      addSystem(String(data.text || ''));
+    } else if (data.type === 'members' && Array.isArray(data.members)) {
+      state.members = new Map(data.members.map(function (m) { return [m.id, m.nick]; }));
+      renderMembers();
+    }
+  }
+
+  function onHostLost() {
+    addSystem('⚠️ 与房主的连接已断开');
+    $('#chatInput').disabled = true;
+    $('#chatForm').querySelector('button').disabled = true;
+  }
+
+  /* ============ 广播 / 发送 ============ */
+  function broadcast(msg, exceptPeerId) {
+    state.conns.forEach(function (conn, id) {
+      if (id === exceptPeerId) return;
+      safeSend(conn, msg);
+    });
+  }
+  function safeSend(conn, msg) {
+    if (!conn || !conn.open) return;
+    try { conn.send(msg); } catch (e) {}
+  }
+  function memberList() {
+    var out = [];
+    state.members.forEach(function (nick, id) { out.push({ id: id, nick: nick }); });
+    return out;
+  }
+
+  /* ============ 聊天 UI ============ */
+  $('#chatForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var input = $('#chatInput');
+    var text = input.value.trim();
+    if (!text) return;
+    input.value = '';
+
+    var ts = Date.now();
+    addChat(state.nick, text, ts, true);
+
+    if (state.isHost) {
+      broadcast({ type: 'chat', nick: state.nick, text: text, ts: ts });
+    } else if (state.hostConn && state.hostConn.open) {
+      safeSend(state.hostConn, { type: 'chat', text: text });
+    } else {
+      addSystem('未连接到房主，消息未发送');
+    }
+  });
+
+  function appendNode(node) {
+    var box = $('#messages');
+    var stick = box.scrollTop + box.clientHeight >= box.scrollHeight - 60;
+    box.appendChild(node);
+    if (stick) box.scrollTop = box.scrollHeight;
+  }
+
+  function addChat(nick, text, ts, self) {
+    var el = document.createElement('div');
+    el.className = 'msg' + (self ? ' self' : '');
+
+    var meta = document.createElement('div');
+    meta.className = 'meta';
+    meta.textContent = nick + ' · ' + fmtTime(ts);
+
+    var body = document.createElement('div');
+    body.className = 'body';
+    body.textContent = text;
+
+    el.appendChild(meta);
+    el.appendChild(body);
+    appendNode(el);
+  }
+
+  function addSystem(text) {
+    var el = document.createElement('div');
+    el.className = 'sys';
+    el.textContent = text;
+    appendNode(el);
+  }
+
+  function renderMembers() {
+    $('#memberCount').textContent = state.members.size + ' 人';
+  }
+
+  /* ============ 顶栏操作 ============ */
+  $('#copyBtn').addEventListener('click', function () {
+    var text = state.roomId;
+    function fallback() {
+      var ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try { document.execCommand('copy'); toast('房间号已复制：' + text); }
+      catch (e) { toast('复制失败，请手动记录：' + text); }
+      ta.remove();
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text)
+        .then(function () { toast('房间号已复制：' + text); })
+        .catch(fallback);
+    } else {
+      fallback();
+    }
+  });
+
+  $('#leaveBtn').addEventListener('click', function () {
+    var tip = state.isHost
+      ? '你是房主，退出后房间会关闭，确定吗？'
+      : '确定要退出房间吗？';
+    if (!confirm(tip)) return;
+    teardown();
+    showScreen('lobby');
+    showMsg('');
+  });
+
+  /* ============ 清理 ============ */
+  function teardown() {
+    state.connected = false;
+
+    if (state.hostConn) {
+      try { state.hostConn.close(); } catch (e) {}
+      state.hostConn = null;
+    }
+    state.conns.forEach(function (c) { try { c.close(); } catch (e) {} });
+    state.conns.clear();
+    state.members.clear();
+
+    if (state.peer) {
+      try { state.peer.destroy(); } catch (e) {}
+      state.peer = null;
+    }
+
+    state.isHost = false;
+    state.url = '';
+    state.roomId = '';
+
+    var iframe = $('#player');
+    iframe.src = 'about:blank';
+    $('#playerPlaceholder').classList.remove('hidden');
+    $('#messages').innerHTML = '';
+    $('#chatInput').disabled = false;
+    $('#chatForm').querySelector('button').disabled = false;
+    $('#roomIdText').textContent = '------';
+    renderMembers();
+  }
+
+  window.addEventListener('pagehide', function () {
+    try { if (state.peer) state.peer.destroy(); } catch (e) {}
+  });
+
+})();
+</script>
+</body>
+</html>
