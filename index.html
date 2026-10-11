@@ -47,7 +47,7 @@
   .status.error{color:#ff6b6b}
 
   /* ---------- 房间 ---------- */
-  #room{height:100vh;height:100dvh;display:flex;flex-direction:column}
+  #room{height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 
   .topbar{
     display:flex;align-items:center;justify-content:space-between;gap:8px;
@@ -61,7 +61,6 @@
   .ghost:hover{color:var(--text);border-color:#3a4152}
   .badge{background:var(--panel2);color:var(--muted);font-size:12px;padding:4px 10px;border-radius:999px;white-space:nowrap}
 
-  /* 角色标签 */
   .role-tag{
     font-size:11px;padding:2px 8px;border-radius:6px;letter-spacing:.5px;
     border:1px solid rgba(76,139,245,.55);color:var(--accent);
@@ -73,13 +72,14 @@
 
   /* ---------- 主区域 ---------- */
   .main{
-    flex:1 1 auto;display:flex;flex-direction:column;min-height:0;min-width:0;
-    background:#000;
+    flex:1 1 auto;display:flex;flex-direction:column;
+    min-height:0;min-width:0;overflow:hidden;background:#000;
   }
 
   .player-col{
     position:relative;
-    flex:0 0 auto;display:flex;flex-direction:column;min-width:0;min-height:0;
+    flex:0 0 auto;display:flex;flex-direction:column;
+    min-width:0;min-height:0;overflow:hidden;
   }
 
   .host-bar{
@@ -101,6 +101,7 @@
   }
   .host-bar button:hover{background:var(--accent2)}
 
+  /* 竖屏默认：player-outer 由内部 16:9 的 player-wrap 撑开 */
   .player-outer{
     position:relative;
     flex:0 0 auto;
@@ -111,7 +112,10 @@
   .player-wrap{
     position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden;
   }
-  .player-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000}
+  .player-wrap iframe{
+    position:absolute;inset:0;width:100%;height:100%;
+    border:0;display:block;background:#000;
+  }
   .placeholder{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     color:#4d5568;font-size:14px;background:#000;pointer-events:none;
@@ -196,22 +200,57 @@
   .chat.collapsed .chat-head-label{display:none}
   .chat.collapsed .collapse-icon{transform:rotate(180deg)}
 
+  /* 竖屏时限制视频高度，保证聊天可见 */
   @media (max-aspect-ratio:1/1){
     .player-outer{max-height:52vh}
     .player-wrap{max-height:52vh}
   }
 
-  /* ---------- 横屏：右侧聊天 ---------- */
+  /* =========================================================
+     横屏布局（关键修复）
+     player-outer 用 flex:1 撑满剩余空间，不再用 height:100%
+     ========================================================= */
   @media (min-aspect-ratio:1/1) and (min-width:560px){
-    .main{flex-direction:row}
-    .player-col{flex:1 1 auto;height:100%;min-width:0}
-    .player-outer{flex:1 1 auto;height:100%;min-height:0;display:flex}
-    .player-wrap{flex:1 1 auto;width:100%;height:100%;aspect-ratio:auto;max-height:none}
+    .main{flex-direction:row;overflow:hidden}
+
+    .player-col{
+      flex:1 1 auto;
+      height:100%;
+      min-width:0;
+      min-height:0;
+      display:flex;
+      flex-direction:column;
+      overflow:hidden;
+    }
+
+    /* 换源栏保持自然高度 */
+    .host-bar{flex:0 0 auto}
+
+    /* 关键：占据剩余空间，而不是 100% 高度 */
+    .player-outer{
+      flex:1 1 auto;
+      width:100%;
+      height:auto;
+      min-height:0;
+      max-height:none;
+      position:relative;
+      display:block;
+    }
+
+    /* player-wrap 绝对定位填满 player-outer */
+    .player-wrap{
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      aspect-ratio:auto;
+      max-height:none;
+    }
 
     .chat{
       width:340px;flex:0 0 340px;min-width:260px;
+      height:100%;min-height:0;
       border-top:0;border-left:1px solid var(--line);
-      height:100%;
     }
     .chat.collapsed{
       width:46px;flex:0 0 46px;min-width:46px;
@@ -224,14 +263,22 @@
     .chat.collapsed .collapse-icon{transform:rotate(90deg)}
   }
 
-  /* ---------- 全屏时的布局 ---------- */
+  /* =========================================================
+     全屏 · 竖屏（视频在上，聊天在下）
+     ========================================================= */
   @media (max-aspect-ratio:1/1){
     .main:fullscreen,
-    .main:-webkit-full-screen{flex-direction:column;background:#000}
+    .main:-webkit-full-screen{
+      flex-direction:column;background:#000;overflow:hidden;
+    }
     .main:fullscreen .player-col,
-    .main:-webkit-full-screen .player-col{flex:0 0 auto;max-height:60vh}
+    .main:-webkit-full-screen .player-col{
+      flex:0 0 auto;max-height:60vh;overflow:hidden;
+    }
     .main:fullscreen .player-outer,
-    .main:-webkit-full-screen .player-outer{max-height:60vh}
+    .main:-webkit-full-screen .player-outer{
+      max-height:60vh;
+    }
     .main:fullscreen .chat,
     .main:-webkit-full-screen .chat{
       flex:1 1 auto;min-height:160px;width:100%;
@@ -243,20 +290,44 @@
     }
   }
 
+  /* =========================================================
+     全屏 · 横屏（视频在左，聊天在右）— 关键修复
+     ========================================================= */
   @media (min-aspect-ratio:1/1){
     .main:fullscreen,
-    .main:-webkit-full-screen{flex-direction:row;background:#000}
+    .main:-webkit-full-screen{
+      flex-direction:row;background:#000;overflow:hidden;
+    }
     .main:fullscreen .player-col,
-    .main:-webkit-full-screen .player-col{flex:1 1 auto;height:100%;max-height:none}
+    .main:-webkit-full-screen .player-col{
+      flex:1 1 auto;
+      height:100%;
+      max-height:none;
+      min-height:0;
+      overflow:hidden;
+    }
     .main:fullscreen .player-outer,
-    .main:-webkit-full-screen .player-outer{height:100%;max-height:none;display:flex}
+    .main:-webkit-full-screen .player-outer{
+      flex:1 1 auto;
+      height:auto;
+      min-height:0;
+      max-height:none;
+      position:relative;
+      display:block;
+    }
     .main:fullscreen .player-wrap,
     .main:-webkit-full-screen .player-wrap{
-      flex:1 1 auto;width:100%;height:100%;aspect-ratio:auto;max-height:none;
+      position:absolute;
+      inset:0;
+      width:100%;
+      height:100%;
+      aspect-ratio:auto;
+      max-height:none;
     }
     .main:fullscreen .chat,
     .main:-webkit-full-screen .chat{
-      width:340px;flex:0 0 340px;min-width:280px;height:100%;
+      width:340px;flex:0 0 340px;min-width:280px;
+      height:100%;min-height:0;
       border-top:0;border-left:1px solid var(--line);
     }
     .main:fullscreen .chat.collapsed,
@@ -281,7 +352,7 @@
 <div id="lobby">
   <div class="card">
     <h1>📺 一起看</h1>
-    <p class="sub">临时观影房 · 无需注册</p>
+    <p class="sub">临时观影房 · 浏览器直连 · 无需注册</p>
 
     <label for="nickInput">你的昵称</label>
     <input id="nickInput" type="text" maxlength="12" placeholder="给自己起个名字" autocomplete="nickname">
@@ -485,21 +556,14 @@
   /* ============ 创建房间 ============ */
   function createRoom() {
     if (typeof Peer === 'undefined') { showMsg('PeerJS 加载失败，请检查网络', true); return; }
-
     var nick = ($('#nickInput').value.trim() || '房主').slice(0, 12);
     var url = extractUrl($('#urlInput').value);
     if (!url) { showMsg('请填写视频链接', true); return; }
     if (!validUrl(url)) { showMsg('链接需要以 http:// 或 https:// 开头', true); return; }
 
-    // 重置所有状态（防止上一次会话残留）
     resetRuntimeState();
-
     localStorage.setItem('tvparty_nick', nick);
-    state.nick = nick;
-    state.url = url;
-    state.isHost = true;
-    hostRetries = 0;
-
+    state.nick = nick; state.url = url; state.isHost = true; hostRetries = 0;
     setLobbyBusy(true, '正在创建房间…');
     startHost();
   }
@@ -532,19 +596,13 @@
   /* ============ 加入房间 ============ */
   function joinRoom() {
     if (typeof Peer === 'undefined') { showMsg('PeerJS 加载失败，请检查网络', true); return; }
-
     var nick = ($('#nickInput').value.trim() || '访客').slice(0, 12);
     var roomId = $('#roomInput').value.trim();
     if (!/^\d{6}$/.test(roomId)) { showMsg('请输入 6 位数字房间号', true); return; }
 
-    // 重置所有状态
     resetRuntimeState();
-
     localStorage.setItem('tvparty_nick', nick);
-    state.nick = nick;
-    state.roomId = roomId;
-    state.isHost = false;   // 明确标记为访客
-
+    state.nick = nick; state.roomId = roomId; state.isHost = false;
     setLobbyBusy(true, '正在连接房间 ' + roomId + ' …');
 
     var peer = new Peer(PEER_OPTS);
@@ -557,12 +615,10 @@
       clearTimeout(timer);
       setLobbyBusy(false);
       showMsg(msg, true);
-      state.roomId = '';
-      state.hostConn = null;
+      state.roomId = ''; state.hostConn = null;
       try { peer.destroy(); } catch (e) {}
       state.peer = null;
     }
-
     var timer = setTimeout(function () {
       fail('连接超时，请确认房号是否正确、房主是否在线');
     }, 15000);
@@ -597,7 +653,7 @@
     peer.on('disconnected', function () { try { peer.reconnect(); } catch (e) {} });
   }
 
-  /* ============ 运行时状态重置 ============ */
+  /* ============ 状态重置 ============ */
   function resetRuntimeState() {
     state.connected = false;
     state.hostConn = null;
@@ -605,8 +661,7 @@
     state.conns.clear();
     state.members.clear();
     if (state.peer) { try { state.peer.destroy(); } catch (e) {} state.peer = null; }
-    state.roomId = '';
-    state.url = '';
+    state.roomId = ''; state.url = '';
     unreadCount = 0;
     updateUnreadBadge();
     chatPanelEl.classList.remove('collapsed');
@@ -618,23 +673,19 @@
     showScreen('room');
     $('#roomIdText').textContent = state.roomId;
 
-    // 更新角色标签
     var roleTag = $('#roleTag');
     roleTag.textContent = state.isHost ? '房主' : '访客';
     roleTag.classList.toggle('guest', !state.isHost);
 
-    // 房主才有换源栏
     $('#hostBar').classList.toggle('hidden', !state.isHost);
     if (state.isHost) $('#urlEdit').value = state.url;
 
-    // 重置聊天未读 / 展开
     chatPanelEl.classList.remove('collapsed');
     unreadCount = 0;
     updateUnreadBadge();
 
     if (state.url) setPlayer(state.url);
     renderMembers();
-
     addSystem(state.isHost
       ? '房间已创建，把房号发给朋友，一起看吧～'
       : '已加入房间，你是访客');
@@ -667,7 +718,6 @@
 
   function handleHostData(conn, data) {
     if (!data || typeof data !== 'object') return;
-
     if (data.type === 'hello') {
       var nick = String(data.nick || '匿名').slice(0, 12);
       state.members.set(conn.peer, nick);
@@ -806,7 +856,7 @@
     }
   });
 
-  /* ============ 聊天发送（关键修复） ============ */
+  /* ============ 聊天发送 ============ */
   $('#chatForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var input = $('#chatInput');
@@ -817,18 +867,14 @@
     var ts = Date.now();
     addChat(state.nick, text, ts, true);
 
-    // 判断依据：只有访客会持有 hostConn，房主一定为 null
-    // 这样即使 isHost 标志位出错，也能正确路由
+    // 用 hostConn 判断角色：房主永远为 null，访客一定非 null
     if (state.hostConn) {
-      // === 访客路径 ===
       if (state.hostConn.open) {
         safeSend(state.hostConn, { type: 'chat', text: text });
       } else {
         addSystem('未连接到房主，消息未发送', true);
       }
     } else {
-      // === 房主路径 ===
-      // 广播给所有已连接的访客（可以为空，那就只自己看到）
       broadcast({ type: 'chat', nick: state.nick, text: text, ts: ts });
     }
   });
