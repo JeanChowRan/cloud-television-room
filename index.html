@@ -70,7 +70,7 @@
     border-color:rgba(139,147,167,.5);color:var(--muted);background:rgba(139,147,167,.08);
   }
 
-  /* ---------- 主区域 ---------- */
+  /* ---------- 主区域（上下结构，横竖屏统一） ---------- */
   .main{
     flex:1 1 auto;display:flex;flex-direction:column;
     min-height:0;min-width:0;overflow:hidden;background:#000;
@@ -101,16 +101,23 @@
   }
   .host-bar button:hover{background:var(--accent2)}
 
-  /* 竖屏默认：player-outer 由内部 16:9 的 player-wrap 撑开 */
+  /* 视频区域：高度按 min(16:9宽度, 45vh)，保证聊天至少 55vh-顶栏 */
   .player-outer{
     position:relative;
     flex:0 0 auto;
     width:100%;
+    height:min(56.25vw, 45vh);
     background:#000;
     overflow:hidden;
   }
+  /* 设备横屏时视频占比更大一些 */
+  @media (min-aspect-ratio:1/1){
+    .player-outer{height:min(56.25vw, 55vh)}
+  }
+
   .player-wrap{
-    position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden;
+    position:absolute;inset:0;width:100%;height:100%;
+    background:#000;overflow:hidden;
   }
   .player-wrap iframe{
     position:absolute;inset:0;width:100%;height:100%;
@@ -135,11 +142,11 @@
   .fs-btn:active{transform:scale(.96)}
   .fs-btn svg{display:block;pointer-events:none}
 
-  /* ---------- 聊天面板 ---------- */
+  /* ---------- 聊天面板（嵌入模式） ---------- */
   .chat{
     flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
     background:var(--panel);border-top:1px solid var(--line);
-    transition:width .18s ease,height .18s ease,flex-basis .18s ease;
+    overflow:hidden;
   }
 
   .chat-head{
@@ -150,7 +157,7 @@
   }
   .chat-head:hover{color:var(--text)}
   .chat-head-label{letter-spacing:.5px}
-  .chat-head-right{display:inline-flex;align-items:center;gap:6px}
+  .chat-head-right{display:inline-flex;align-items:center;gap:6px;position:relative}
   .collapse-icon{font-size:11px;opacity:.8;transition:transform .18s ease}
 
   .unread-badge{
@@ -188,6 +195,7 @@
   .chat-input button{padding:0 16px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:600}
   .chat-input button:disabled{opacity:.5}
 
+  /* 嵌入模式：折叠为底部一条 */
   .chat.collapsed{
     flex:0 0 auto;
     height:46px;min-height:46px;max-height:46px;
@@ -200,140 +208,133 @@
   .chat.collapsed .chat-head-label{display:none}
   .chat.collapsed .collapse-icon{transform:rotate(180deg)}
 
-  /* 竖屏时限制视频高度，保证聊天可见 */
-  @media (max-aspect-ratio:1/1){
-    .player-outer{max-height:52vh}
-    .player-wrap{max-height:52vh}
+  /* =====================================================
+     全屏模式：视频占满整个屏，聊天变右下角悬浮球
+     ===================================================== */
+  .main:fullscreen,
+  .main:-webkit-full-screen{
+    background:#000;
+    flex-direction:column;
+    overflow:hidden;
   }
 
-  /* =========================================================
-     横屏布局（关键修复）
-     player-outer 用 flex:1 撑满剩余空间，不再用 height:100%
-     ========================================================= */
-  @media (min-aspect-ratio:1/1) and (min-width:560px){
-    .main{flex-direction:row;overflow:hidden}
-
-    .player-col{
-      flex:1 1 auto;
-      height:100%;
-      min-width:0;
-      min-height:0;
-      display:flex;
-      flex-direction:column;
-      overflow:hidden;
-    }
-
-    /* 换源栏保持自然高度 */
-    .host-bar{flex:0 0 auto}
-
-    /* 关键：占据剩余空间，而不是 100% 高度 */
-    .player-outer{
-      flex:1 1 auto;
-      width:100%;
-      height:auto;
-      min-height:0;
-      max-height:none;
-      position:relative;
-      display:block;
-    }
-
-    /* player-wrap 绝对定位填满 player-outer */
-    .player-wrap{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      aspect-ratio:auto;
-      max-height:none;
-    }
-
-    .chat{
-      width:340px;flex:0 0 340px;min-width:260px;
-      height:100%;min-height:0;
-      border-top:0;border-left:1px solid var(--line);
-    }
-    .chat.collapsed{
-      width:46px;flex:0 0 46px;min-width:46px;
-      height:100%;min-height:0;max-height:none;
-    }
-    .chat.collapsed .chat-head{
-      flex-direction:column;gap:8px;padding:14px 0;justify-content:flex-start;
-    }
-    .chat.collapsed .chat-head-right{flex-direction:column;gap:6px}
-    .chat.collapsed .collapse-icon{transform:rotate(90deg)}
+  /* 全屏时 player-col 占满整个 main */
+  .main:fullscreen .player-col,
+  .main:-webkit-full-screen .player-col{
+    flex:1 1 auto;
+    height:100%;
+    min-height:0;
+    overflow:hidden;
+  }
+  .main:fullscreen .player-outer,
+  .main:-webkit-full-screen .player-outer{
+    flex:1 1 auto;
+    height:auto;
+    min-height:0;
+    max-height:none;
   }
 
-  /* =========================================================
-     全屏 · 竖屏（视频在上，聊天在下）
-     ========================================================= */
-  @media (max-aspect-ratio:1/1){
-    .main:fullscreen,
-    .main:-webkit-full-screen{
-      flex-direction:column;background:#000;overflow:hidden;
-    }
-    .main:fullscreen .player-col,
-    .main:-webkit-full-screen .player-col{
-      flex:0 0 auto;max-height:60vh;overflow:hidden;
-    }
-    .main:fullscreen .player-outer,
-    .main:-webkit-full-screen .player-outer{
-      max-height:60vh;
-    }
-    .main:fullscreen .chat,
-    .main:-webkit-full-screen .chat{
-      flex:1 1 auto;min-height:160px;width:100%;
-      border-top:1px solid var(--line);border-left:0;
-    }
-    .main:fullscreen .chat.collapsed,
-    .main:-webkit-full-screen .chat.collapsed{
-      flex:0 0 46px;height:46px;min-height:46px;max-height:46px;
-    }
+  /* 聊天面板脱离文档流，变成悬浮面板 */
+  .main:fullscreen .chat,
+  .main:-webkit-full-screen .chat{
+    position:fixed;
+    right:16px;
+    bottom:16px;
+    top:auto;
+    left:auto;
+    flex:none;
+    width:320px;
+    max-width:calc(100vw - 32px);
+    height:55vh;
+    max-height:480px;
+    min-height:220px;
+    border:1px solid var(--line);
+    border-top:1px solid var(--line);
+    border-radius:14px;
+    background:var(--panel);
+    box-shadow:0 12px 40px rgba(0,0,0,.7);
+    overflow:hidden;
+    z-index:10;
+    transition:width .22s ease, height .22s ease, border-radius .22s ease;
   }
 
-  /* =========================================================
-     全屏 · 横屏（视频在左，聊天在右）— 关键修复
-     ========================================================= */
-  @media (min-aspect-ratio:1/1){
-    .main:fullscreen,
-    .main:-webkit-full-screen{
-      flex-direction:row;background:#000;overflow:hidden;
-    }
-    .main:fullscreen .player-col,
-    .main:-webkit-full-screen .player-col{
-      flex:1 1 auto;
-      height:100%;
-      max-height:none;
-      min-height:0;
-      overflow:hidden;
-    }
-    .main:fullscreen .player-outer,
-    .main:-webkit-full-screen .player-outer{
-      flex:1 1 auto;
-      height:auto;
-      min-height:0;
-      max-height:none;
-      position:relative;
-      display:block;
-    }
-    .main:fullscreen .player-wrap,
-    .main:-webkit-full-screen .player-wrap{
-      position:absolute;
-      inset:0;
-      width:100%;
-      height:100%;
-      aspect-ratio:auto;
-      max-height:none;
-    }
-    .main:fullscreen .chat,
-    .main:-webkit-full-screen .chat{
-      width:340px;flex:0 0 340px;min-width:280px;
-      height:100%;min-height:0;
-      border-top:0;border-left:1px solid var(--line);
-    }
-    .main:fullscreen .chat.collapsed,
-    .main:-webkit-full-screen .chat.collapsed{
-      width:46px;flex:0 0 46px;min-width:46px;height:100%;
-    }
+  /* 全屏 · 折叠成圆球 */
+  .main:fullscreen .chat.collapsed,
+  .main:-webkit-full-screen .chat.collapsed{
+    width:56px;
+    height:56px;
+    min-height:0;
+    max-height:none;
+    border-radius:50%;
+    box-shadow:0 8px 24px rgba(0,0,0,.65);
+  }
+
+  .main:fullscreen .chat.collapsed .messages,
+  .main:fullscreen .chat.collapsed .chat-input,
+  .main:-webkit-full-screen .chat.collapsed .messages,
+  .main:-webkit-full-screen .chat.collapsed .chat-input{
+    display:none;
+  }
+
+  /* 全屏球状态：头部铺满，显示聊天气泡图标 */
+  .main:fullscreen .chat.collapsed .chat-head,
+  .main:-webkit-full-screen .chat.collapsed .chat-head{
+    width:100%;
+    height:100%;
+    padding:0;
+    border:0;
+    border-bottom:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--accent);
+    border-radius:50%;
+    position:relative;
+    transition:background .18s;
+  }
+  .main:fullscreen .chat.collapsed .chat-head:hover,
+  .main:-webkit-full-screen .chat.collapsed .chat-head:hover{
+    background:var(--accent2);
+  }
+  .main:fullscreen .chat.collapsed .chat-head-label,
+  .main:fullscreen .chat.collapsed .collapse-icon,
+  .main:-webkit-full-screen .chat.collapsed .chat-head-label,
+  .main:-webkit-full-screen .chat.collapsed .collapse-icon{
+    display:none;
+  }
+
+  /* 球里的聊天气泡图标 */
+  .main:fullscreen .chat.collapsed .chat-head::before,
+  .main:-webkit-full-screen .chat.collapsed .chat-head::before{
+    content:"";
+    display:block;
+    width:26px;
+    height:26px;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z'/%3E%3C/svg%3E");
+    background-size:contain;
+    background-repeat:no-repeat;
+    background-position:center;
+  }
+
+  /* 球状态：未读 badge 浮在球右上角 */
+  .main:fullscreen .chat.collapsed .chat-head-right,
+  .main:-webkit-full-screen .chat.collapsed .chat-head-right{
+    position:absolute;
+    top:-4px;
+    right:-4px;
+    display:inline-flex;
+    flex-direction:row;
+    gap:0;
+  }
+  .main:fullscreen .chat.collapsed .unread-badge,
+  .main:-webkit-full-screen .chat.collapsed .unread-badge{
+    box-shadow:0 0 0 3px var(--bg);
+  }
+
+  /* 全屏悬浮面板状态：展开/收起箭头 */
+  .main:fullscreen .chat:not(.collapsed) .chat-head,
+  .main:-webkit-full-screen .chat:not(.collapsed) .chat-head{
+    border-bottom:1px solid var(--line);
   }
 
   /* ---------- Toast ---------- */
@@ -352,7 +353,7 @@
 <div id="lobby">
   <div class="card">
     <h1>📺 一起看</h1>
-    <p class="sub">临时观影房 · 浏览器直连 · 无需注册</p>
+    <p class="sub">临时观影房 · 无需注册</p>
 
     <label for="nickInput">你的昵称</label>
     <input id="nickInput" type="text" maxlength="12" placeholder="给自己起个名字" autocomplete="nickname">
@@ -653,7 +654,6 @@
     peer.on('disconnected', function () { try { peer.reconnect(); } catch (e) {} });
   }
 
-  /* ============ 状态重置 ============ */
   function resetRuntimeState() {
     state.connected = false;
     state.hostConn = null;
@@ -769,7 +769,6 @@
     $('#chatForm').querySelector('button').disabled = true;
   }
 
-  /* ============ 广播 ============ */
   function broadcast(msg, exceptPeerId) {
     state.conns.forEach(function (conn, id) {
       if (id === exceptPeerId) return;
@@ -824,11 +823,36 @@
            document.msFullscreenElement ||
            null;
   }
+
   function updateFsBtn() {
     var isFs = fullscreenEl() === mainWrap;
     fsIcon.innerHTML = isFs ? FS_EXIT : FS_ENTER;
     fsBtn.title = isFs ? '退出全屏 (F)' : '全屏 (F)';
   }
+
+  // 全屏状态变化：进入时自动折叠为球，退出时恢复展开
+  function onFullscreenChange() {
+    updateFsBtn();
+    var isFs = fullscreenEl() === mainWrap;
+    if (isFs) {
+      // 进入全屏：聊天自动收起为悬浮球
+      chatPanelEl.classList.add('collapsed');
+    } else {
+      // 退出全屏：恢复为嵌入展开状态
+      chatPanelEl.classList.remove('collapsed');
+      unreadCount = 0;
+      updateUnreadBadge();
+      requestAnimationFrame(function () {
+        var box = document.getElementById('messages');
+        box.scrollTop = box.scrollHeight;
+      });
+    }
+  }
+
+  ['fullscreenchange', 'webkitfullscreenchange', 'MSFullscreenChange'].forEach(function (ev) {
+    document.addEventListener(ev, onFullscreenChange);
+  });
+
   function toggleFullscreen() {
     if (!supportsFs) { toast('当前浏览器不支持全屏'); return; }
     if (fullscreenEl()) {
@@ -843,10 +867,9 @@
       if (p && typeof p.catch === 'function') p.catch(function () { toast('无法进入全屏'); });
     } catch (e) { toast('无法进入全屏'); }
   }
+
   fsBtn.addEventListener('click', toggleFullscreen);
-  ['fullscreenchange', 'webkitfullscreenchange', 'MSFullscreenChange'].forEach(function (ev) {
-    document.addEventListener(ev, updateFsBtn);
-  });
+
   document.addEventListener('keydown', function (e) {
     var tag = (e.target && e.target.tagName) || '';
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
