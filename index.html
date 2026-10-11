@@ -61,15 +61,16 @@
   .ghost:hover{color:var(--text);border-color:#3a4152}
   .badge{background:var(--panel2);color:var(--muted);font-size:12px;padding:4px 10px;border-radius:999px;white-space:nowrap}
 
-  /* ---------- 主区域（全屏目标，含播放器 + 聊天） ---------- */
+  /* ---------- 主区域 ---------- */
   .main{
     flex:1 1 auto;display:flex;flex-direction:column;min-height:0;min-width:0;
     background:#000;
   }
-  .main:fullscreen{background:#000}
-  .main:-webkit-full-screen{background:#000}
 
-  .player-col{flex:0 0 auto;display:flex;flex-direction:column;min-width:0;min-height:0}
+  .player-col{
+    position:relative;
+    flex:0 0 auto;display:flex;flex-direction:column;min-width:0;min-height:0;
+  }
 
   /* 房主换源栏 */
   .host-bar{
@@ -91,23 +92,36 @@
   }
   .host-bar button:hover{background:var(--accent2)}
 
-  .player-wrap{position:relative;width:100%;aspect-ratio:16/9;background:#000;flex:0 0 auto;overflow:hidden}
+  /* 播放器外层（用于定位全屏按钮） */
+  .player-outer{
+    position:relative;
+    flex:0 0 auto;
+    width:100%;
+    background:#000;
+    overflow:hidden;
+  }
+  .player-wrap{
+    position:relative;width:100%;aspect-ratio:16/9;background:#000;overflow:hidden;
+  }
   .player-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;display:block;background:#000}
   .placeholder{
     position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
     color:#4d5568;font-size:14px;background:#000;pointer-events:none;
   }
 
-  /* 全屏按钮 */
+  /* ---------- 全屏按钮（SVG，显眼） ---------- */
   .fs-btn{
-    position:absolute;top:10px;right:10px;z-index:5;
-    width:38px;height:38px;border:0;border-radius:9px;
-    background:rgba(15,17,21,.6);color:#fff;font-size:17px;line-height:1;
+    position:absolute;top:12px;right:12px;z-index:20;
+    width:42px;height:42px;border:0;border-radius:10px;
+    background:rgba(15,17,21,.65);color:#fff;
     display:flex;align-items:center;justify-content:center;
-    -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
-    opacity:.72;transition:opacity .18s,background .18s;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    box-shadow:0 2px 10px rgba(0,0,0,.4);
+    opacity:.85;transition:opacity .18s,background .18s,transform .12s;
   }
-  .fs-btn:hover{opacity:1;background:rgba(15,17,21,.92)}
+  .fs-btn:hover{opacity:1;background:rgba(15,17,21,.95);transform:scale(1.05)}
+  .fs-btn:active{transform:scale(.96)}
+  .fs-btn svg{display:block;pointer-events:none}
 
   /* ---------- 聊天面板 ---------- */
   .chat{
@@ -161,10 +175,10 @@
   .chat-input button{padding:0 16px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:600}
   .chat-input button:disabled{opacity:.5}
 
-  /* ---------- 折叠状态（竖屏：底部一条） ---------- */
+  /* 折叠状态（竖屏：底部一条） */
   .chat.collapsed{
     flex:0 0 auto;
-    height:48px;min-height:48px;max-height:48px;
+    height:46px;min-height:46px;max-height:46px;
   }
   .chat.collapsed .messages,
   .chat.collapsed .chat-input{display:none}
@@ -174,24 +188,27 @@
   .chat.collapsed .chat-head-label{display:none}
   .chat.collapsed .collapse-icon{transform:rotate(180deg)}
 
-  /* 竖屏时限制视频高度，给聊天留空间 */
+  /* 竖屏时限制视频高度，保证聊天可见 */
   @media (max-aspect-ratio:1/1){
-    .player-wrap{max-height:46vh}
+    .player-outer{max-height:52vh}
+    .player-wrap{max-height:52vh}
   }
 
   /* ---------- 横屏：右侧聊天 ---------- */
   @media (min-aspect-ratio:1/1) and (min-width:560px){
     .main{flex-direction:row}
     .player-col{flex:1 1 auto;height:100%;min-width:0}
-    .player-wrap{flex:1 1 auto;width:100%;height:auto;aspect-ratio:auto;max-height:none}
+    .player-outer{flex:1 1 auto;height:100%;min-height:0;display:flex}
+    .player-wrap{flex:1 1 auto;width:100%;height:100%;aspect-ratio:auto;max-height:none}
 
     .chat{
-      width:340px;flex:0 0 340px;border-top:0;border-left:1px solid var(--line);
+      width:340px;flex:0 0 340px;min-width:260px;
+      border-top:0;border-left:1px solid var(--line);
+      height:100%;
     }
-    /* 横屏折叠：变成右侧窄条 */
     .chat.collapsed{
-      width:48px;flex:0 0 48px;
-      height:auto;min-height:0;max-height:none;
+      width:46px;flex:0 0 46px;min-width:46px;
+      height:100%;min-height:0;max-height:none;
     }
     .chat.collapsed .chat-head{
       flex-direction:column;gap:8px;padding:14px 0;justify-content:flex-start;
@@ -200,11 +217,92 @@
     .chat.collapsed .collapse-icon{transform:rotate(90deg)}
   }
 
+  /* ---------- 全屏时的强制布局（关键修复） ---------- */
+  /* 全屏元素是整个 .main，视频+聊天一起进全屏 */
+
+  /* 竖屏全屏：视频固定宽高比 + 聊天保底高度 */
+  @media (max-aspect-ratio:1/1){
+    .main:fullscreen,
+    .main:-webkit-full-screen{
+      flex-direction:column;
+      background:#000;
+    }
+    .main:fullscreen .player-col,
+    .main:-webkit-full-screen .player-col{
+      flex:0 0 auto;
+      max-height:60vh;
+    }
+    .main:fullscreen .player-outer,
+    .main:-webkit-full-screen .player-outer{
+      max-height:60vh;
+    }
+    .main:fullscreen .chat,
+    .main:-webkit-full-screen .chat{
+      flex:1 1 auto;
+      min-height:160px;
+      width:100%;
+      border-top:1px solid var(--line);
+      border-left:0;
+    }
+    .main:fullscreen .chat.collapsed,
+    .main:-webkit-full-screen .chat.collapsed{
+      flex:0 0 46px;
+      height:46px;
+      min-height:46px;
+      max-height:46px;
+    }
+  }
+
+  /* 横屏全屏：视频占满，聊天固定右侧 340px */
+  @media (min-aspect-ratio:1/1){
+    .main:fullscreen,
+    .main:-webkit-full-screen{
+      flex-direction:row;
+      background:#000;
+    }
+    .main:fullscreen .player-col,
+    .main:-webkit-full-screen .player-col{
+      flex:1 1 auto;
+      height:100%;
+      max-height:none;
+    }
+    .main:fullscreen .player-outer,
+    .main:-webkit-full-screen .player-outer{
+      height:100%;
+      max-height:none;
+      display:flex;
+    }
+    .main:fullscreen .player-wrap,
+    .main:-webkit-full-screen .player-wrap{
+      flex:1 1 auto;
+      width:100%;
+      height:100%;
+      aspect-ratio:auto;
+      max-height:none;
+    }
+    .main:fullscreen .chat,
+    .main:-webkit-full-screen .chat{
+      width:340px;
+      flex:0 0 340px;
+      min-width:280px;
+      height:100%;
+      border-top:0;
+      border-left:1px solid var(--line);
+    }
+    .main:fullscreen .chat.collapsed,
+    .main:-webkit-full-screen .chat.collapsed{
+      width:46px;
+      flex:0 0 46px;
+      min-width:46px;
+      height:100%;
+    }
+  }
+
   /* ---------- Toast ---------- */
   .toast{
     position:fixed;left:50%;bottom:36px;transform:translate(-50%,12px);
     background:rgba(45,51,68,.96);color:#fff;padding:10px 18px;border-radius:10px;
-    font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:99;
+    font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:9999;
     max-width:80vw;text-align:center;
   }
   .toast.show{opacity:1;transform:translate(-50%,0)}
@@ -216,7 +314,7 @@
 <div id="lobby">
   <div class="card">
     <h1>📺 一起看</h1>
-    <p class="sub"> 临时观影房 · 无需注册</p>
+    <p class="sub">临时观影房 · 浏览器直连 · 无需注册</p>
 
     <label for="nickInput">你的昵称</label>
     <input id="nickInput" type="text" maxlength="12" placeholder="给自己起个名字" autocomplete="nickname">
@@ -258,9 +356,8 @@
     </div>
   </header>
 
-  <!-- 全屏目标：包含播放器 + 聊天 -->
+  <!-- 全屏目标：视频 + 聊天一起全屏 -->
   <div class="main" id="mainWrap">
-    <!-- 视频列 -->
     <div class="player-col">
       <div id="hostBar" class="host-bar hidden">
         <span class="tag">房主</span>
@@ -268,15 +365,24 @@
         <button id="applyUrlBtn" type="button">同步</button>
       </div>
 
-      <div class="player-wrap" id="playerWrap">
-        <iframe id="player" title="视频" allowfullscreen
-          allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write"></iframe>
-        <div id="playerPlaceholder" class="placeholder">等待视频…</div>
-        <button id="fsBtn" class="fs-btn" type="button" title="全屏">⛶</button>
+      <div class="player-outer">
+        <div class="player-wrap" id="playerWrap">
+          <iframe id="player" title="视频" allowfullscreen
+            allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write"></iframe>
+          <div id="playerPlaceholder" class="placeholder">等待视频…</div>
+        </div>
+        <button id="fsBtn" class="fs-btn" type="button" title="全屏 (F)">
+          <svg id="fsIcon" viewBox="0 0 24 24" width="20" height="20" fill="none"
+               stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+            <path d="M16 3h3a2 2 0 0 1 2 2v3"/>
+            <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+            <path d="M8 21H5a2 2 0 0 1-2-2v-3"/>
+          </svg>
+        </button>
       </div>
     </div>
 
-    <!-- 聊天面板 -->
     <aside class="chat" id="chatPanel">
       <div class="chat-head" id="chatHead" title="点击折叠 / 展开聊天">
         <span class="chat-head-label">聊天</span>
@@ -299,27 +405,18 @@
 (function () {
   'use strict';
 
-  /* ============ 配置 ============ */
   var PEER_OPTS = { debug: 1 };
   var PREFIX = 'tvparty-v1-';
 
-  /* ============ 状态 ============ */
   var state = {
-    peer: null,
-    isHost: false,
-    connected: false,
-    roomId: '',
-    nick: '',
-    url: '',
-    hostConn: null,
-    conns: new Map(),
-    members: new Map()
+    peer: null, isHost: false, connected: false,
+    roomId: '', nick: '', url: '',
+    hostConn: null, conns: new Map(), members: new Map()
   };
 
   var hostRetries = 0;
   var unreadCount = 0;
 
-  /* ============ 小工具 ============ */
   function $(s) { return document.querySelector(s); }
   function randomRoomId() { return String(Math.floor(100000 + Math.random() * 900000)); }
   function peerIdForRoom(id) { return PREFIX + id + '-host'; }
@@ -381,7 +478,6 @@
   }
   function toggleChat() {
     if (isChatCollapsed()) {
-      // 展开
       chatPanelEl.classList.remove('collapsed');
       unreadCount = 0;
       updateUnreadBadge();
@@ -390,13 +486,12 @@
         box.scrollTop = box.scrollHeight;
       });
     } else {
-      // 折叠
       chatPanelEl.classList.add('collapsed');
     }
   }
   document.getElementById('chatHead').addEventListener('click', toggleChat);
 
-  /* ============ 界面：大厅 ============ */
+  /* ============ 大厅 ============ */
   document.querySelectorAll('.tab').forEach(function (btn) {
     btn.addEventListener('click', function () {
       document.querySelectorAll('.tab').forEach(function (b) {
@@ -425,18 +520,13 @@
   /* ============ 创建房间 ============ */
   function createRoom() {
     if (typeof Peer === 'undefined') { showMsg('PeerJS 加载失败，请检查网络', true); return; }
-
     var nick = ($('#nickInput').value.trim() || '房主').slice(0, 12);
     var url = extractUrl($('#urlInput').value);
     if (!url) { showMsg('请填写视频链接', true); return; }
     if (!validUrl(url)) { showMsg('链接需要以 http:// 或 https:// 开头', true); return; }
 
     localStorage.setItem('tvparty_nick', nick);
-    state.nick = nick;
-    state.url = url;
-    state.isHost = true;
-    hostRetries = 0;
-
+    state.nick = nick; state.url = url; state.isHost = true; hostRetries = 0;
     setLobbyBusy(true, '正在创建房间…');
     startHost();
   }
@@ -451,9 +541,7 @@
       state.members.set(peer.id, state.nick);
       enterRoom();
     });
-
     peer.on('connection', onHostConnection);
-
     peer.on('error', function (err) {
       if (err && err.type === 'unavailable-id' && hostRetries < 5) {
         hostRetries++;
@@ -465,30 +553,23 @@
       showMsg('连接失败：' + ((err && (err.type || err.message)) || '未知错误'), true);
       state.isHost = false;
     });
-
-    peer.on('disconnected', function () {
-      try { peer.reconnect(); } catch (e) {}
-    });
+    peer.on('disconnected', function () { try { peer.reconnect(); } catch (e) {} });
   }
 
   /* ============ 加入房间 ============ */
   function joinRoom() {
     if (typeof Peer === 'undefined') { showMsg('PeerJS 加载失败，请检查网络', true); return; }
-
     var nick = ($('#nickInput').value.trim() || '访客').slice(0, 12);
     var roomId = $('#roomInput').value.trim();
     if (!/^\d{6}$/.test(roomId)) { showMsg('请输入 6 位数字房间号', true); return; }
 
     localStorage.setItem('tvparty_nick', nick);
-    state.nick = nick;
-    state.roomId = roomId;
-
+    state.nick = nick; state.roomId = roomId;
     setLobbyBusy(true, '正在连接房间 ' + roomId + ' …');
 
     var peer = new Peer(PEER_OPTS);
     state.peer = peer;
     var settled = false;
-
     function fail(msg) {
       if (settled) return;
       settled = true;
@@ -499,7 +580,6 @@
       try { peer.destroy(); } catch (e) {}
       state.peer = null;
     }
-
     var timer = setTimeout(function () {
       fail('连接超时，请确认房号是否正确、房主是否在线');
     }, 15000);
@@ -508,9 +588,7 @@
       var conn = peer.connect(peerIdForRoom(roomId), { reliable: true });
       state.hostConn = conn;
 
-      conn.on('open', function () {
-        conn.send({ type: 'hello', nick: nick });
-      });
+      conn.on('open', function () { conn.send({ type: 'hello', nick: nick }); });
 
       conn.on('data', function (data) {
         if (data && data.type === 'welcome') {
@@ -524,11 +602,7 @@
         }
         handleGuestData(data);
       });
-
-      conn.on('close', function () {
-        if (state.connected) onHostLost();
-      });
-
+      conn.on('close', function () { if (state.connected) onHostLost(); });
       conn.on('error', function () {});
     });
 
@@ -537,10 +611,7 @@
       if (t === 'peer-unavailable') fail('房间不存在，或房主已离线');
       else fail('连接失败：' + (t || (err && err.message) || '未知错误'));
     });
-
-    peer.on('disconnected', function () {
-      try { peer.reconnect(); } catch (e) {}
-    });
+    peer.on('disconnected', function () { try { peer.reconnect(); } catch (e) {} });
   }
 
   /* ============ 进入房间 ============ */
@@ -558,11 +629,7 @@
 
     if (state.url) setPlayer(state.url);
     renderMembers();
-
-    addSystem(state.isHost
-      ? '房间已创建，把房号发给朋友，一起看吧～'
-      : '已加入房间');
-
+    addSystem(state.isHost ? '房间已创建，把房号发给朋友，一起看吧～' : '已加入房间');
     if (window.innerWidth > 720) $('#chatInput').focus();
   }
 
@@ -573,12 +640,8 @@
 
   /* ============ 房主：连接管理 ============ */
   function onHostConnection(conn) {
-    conn.on('open', function () {
-      state.conns.set(conn.peer, conn);
-    });
-
+    conn.on('open', function () { state.conns.set(conn.peer, conn); });
     conn.on('data', function (data) { handleHostData(conn, data); });
-
     conn.on('close', function () {
       var nick = state.members.get(conn.peer);
       state.conns.delete(conn.peer);
@@ -590,7 +653,6 @@
       broadcast({ type: 'members', members: memberList() });
       renderMembers();
     });
-
     conn.on('error', function () {});
   }
 
@@ -600,22 +662,17 @@
     if (data.type === 'hello') {
       var nick = String(data.nick || '匿名').slice(0, 12);
       state.members.set(conn.peer, nick);
-
       safeSend(conn, {
         type: 'welcome',
-        url: state.url,
-        roomId: state.roomId,
-        hostNick: state.nick,
-        members: memberList()
+        url: state.url, roomId: state.roomId,
+        hostNick: state.nick, members: memberList()
       });
-
       addSystem(nick + ' 加入了房间');
       broadcast({ type: 'system', text: nick + ' 加入了房间' }, conn.peer);
       broadcast({ type: 'members', members: memberList() });
       renderMembers();
       return;
     }
-
     if (data.type === 'chat') {
       var senderNick = state.members.get(conn.peer) || '匿名';
       var text = String(data.text == null ? '' : data.text).slice(0, 500).trim();
@@ -630,17 +687,13 @@
   /* ============ 访客：接收房主消息 ============ */
   function handleGuestData(data) {
     if (!data || typeof data !== 'object') return;
-
     if (data.type === 'chat') {
       addChat(data.nick || '匿名', String(data.text || ''), data.ts, false);
-
     } else if (data.type === 'system') {
       addSystem(String(data.text || ''));
-
     } else if (data.type === 'members' && Array.isArray(data.members)) {
       state.members = new Map(data.members.map(function (m) { return [m.id, m.nick]; }));
       renderMembers();
-
     } else if (data.type === 'url') {
       var u = String(data.url || '');
       if (u && u !== state.url) {
@@ -657,7 +710,7 @@
     $('#chatForm').querySelector('button').disabled = true;
   }
 
-  /* ============ 广播 / 发送 ============ */
+  /* ============ 广播 ============ */
   function broadcast(msg, exceptPeerId) {
     state.conns.forEach(function (conn, id) {
       if (id === exceptPeerId) return;
@@ -674,37 +727,39 @@
     return out;
   }
 
-  /* ============ 房主：切换视频源并同步 ============ */
+  /* ============ 房主换源 ============ */
   function applyUrlChange() {
     if (!state.isHost) return;
     var url = extractUrl($('#urlEdit').value);
     if (!url) { toast('请填写视频链接'); return; }
     if (!validUrl(url)) { toast('链接需以 http:// 或 https:// 开头'); return; }
     if (url === state.url) { toast('链接没有变化'); return; }
-
     state.url = url;
     $('#urlEdit').value = url;
     setPlayer(url);
-
     broadcast({ type: 'url', url: url, by: state.nick });
-
     addSystem('已切换视频源');
     toast('已同步给房间内所有人');
   }
-
   $('#applyUrlBtn').addEventListener('click', applyUrlChange);
   $('#urlEdit').addEventListener('keydown', function (e) {
     if (e.key === 'Enter') { e.preventDefault(); applyUrlChange(); }
   });
 
-  /* ============ 全屏（作用于 mainWrap，含播放器 + 聊天） ============ */
+  /* ============ 全屏（作用于 mainWrap：视频 + 聊天一起） ============ */
   var mainWrap = document.getElementById('mainWrap');
   var fsBtn = document.getElementById('fsBtn');
+  var fsIcon = document.getElementById('fsIcon');
+
+  var FS_ENTER = '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M16 3h3a2 2 0 0 1 2 2v3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/><path d="M8 21H5a2 2 0 0 1-2-2v-3"/>';
+  var FS_EXIT  = '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>';
 
   var supportsFs = !!(mainWrap.requestFullscreen ||
                       mainWrap.webkitRequestFullscreen ||
                       mainWrap.msRequestFullscreen);
-  if (!supportsFs) fsBtn.classList.add('hidden');
+  if (!supportsFs) {
+    fsBtn.style.display = 'none';
+  }
 
   function fullscreenEl() {
     return document.fullscreenElement ||
@@ -715,8 +770,8 @@
 
   function updateFsBtn() {
     var isFs = fullscreenEl() === mainWrap;
-    fsBtn.textContent = isFs ? '⤡' : '⛶';
-    fsBtn.title = isFs ? '退出全屏' : '全屏';
+    fsIcon.innerHTML = isFs ? FS_EXIT : FS_ENTER;
+    fsBtn.title = isFs ? '退出全屏 (F)' : '全屏 (F)';
   }
 
   function toggleFullscreen() {
@@ -746,12 +801,10 @@
   }
 
   fsBtn.addEventListener('click', toggleFullscreen);
-
   ['fullscreenchange', 'webkitfullscreenchange', 'MSFullscreenChange'].forEach(function (ev) {
     document.addEventListener(ev, updateFsBtn);
   });
 
-  // F 键全屏（输入框里不触发）
   document.addEventListener('keydown', function (e) {
     var tag = (e.target && e.target.tagName) || '';
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -761,7 +814,7 @@
     }
   });
 
-  /* ============ 聊天 UI ============ */
+  /* ============ 聊天 ============ */
   $('#chatForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var input = $('#chatInput');
@@ -791,19 +844,15 @@
   function addChat(nick, text, ts, self) {
     var el = document.createElement('div');
     el.className = 'msg' + (self ? ' self' : '');
-
     var meta = document.createElement('div');
     meta.className = 'meta';
     meta.textContent = nick + ' · ' + fmtTime(ts);
-
     var body = document.createElement('div');
     body.className = 'body';
     body.textContent = text;
-
     el.appendChild(meta);
     el.appendChild(body);
     appendNode(el);
-
     if (!self) noteUnread();
   }
 
@@ -819,7 +868,7 @@
     $('#memberCount').textContent = state.members.size + ' 人';
   }
 
-  /* ============ 顶栏操作 ============ */
+  /* ============ 顶栏 ============ */
   $('#copyBtn').addEventListener('click', function () {
     var text = state.roomId;
     function fallback() {
@@ -837,15 +886,11 @@
       navigator.clipboard.writeText(text)
         .then(function () { toast('房间号已复制：' + text); })
         .catch(fallback);
-    } else {
-      fallback();
-    }
+    } else { fallback(); }
   });
 
   $('#leaveBtn').addEventListener('click', function () {
-    var tip = state.isHost
-      ? '你是房主，退出后房间会关闭，确定吗？'
-      : '确定要退出房间吗？';
+    var tip = state.isHost ? '你是房主，退出后房间会关闭，确定吗？' : '确定要退出房间吗？';
     if (!confirm(tip)) return;
     teardown();
     showScreen('lobby');
@@ -855,28 +900,17 @@
   /* ============ 清理 ============ */
   function teardown() {
     state.connected = false;
-
     if (fullscreenEl()) {
       var exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
       if (exit) { try { exit.call(document); } catch (e) {} }
     }
-
-    if (state.hostConn) {
-      try { state.hostConn.close(); } catch (e) {}
-      state.hostConn = null;
-    }
+    if (state.hostConn) { try { state.hostConn.close(); } catch (e) {} state.hostConn = null; }
     state.conns.forEach(function (c) { try { c.close(); } catch (e) {} });
     state.conns.clear();
     state.members.clear();
+    if (state.peer) { try { state.peer.destroy(); } catch (e) {} state.peer = null; }
 
-    if (state.peer) {
-      try { state.peer.destroy(); } catch (e) {}
-      state.peer = null;
-    }
-
-    state.isHost = false;
-    state.url = '';
-    state.roomId = '';
+    state.isHost = false; state.url = ''; state.roomId = '';
 
     var iframe = $('#player');
     iframe.src = 'about:blank';
@@ -889,7 +923,6 @@
     $('#urlEdit').value = '';
     renderMembers();
 
-    // 重置聊天折叠 / 未读
     chatPanelEl.classList.remove('collapsed');
     unreadCount = 0;
     updateUnreadBadge();
