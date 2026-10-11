@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0f1115">
-<title>云端观影房</title>
+<title>一起看 · 观影房</title>
 <style>
   :root{
     --bg:#0f1115; --panel:#171a21; --panel2:#1e2230; --line:#2a2f3d;
@@ -61,11 +61,17 @@
   .ghost:hover{color:var(--text);border-color:#3a4152}
   .badge{background:var(--panel2);color:var(--muted);font-size:12px;padding:4px 10px;border-radius:999px;white-space:nowrap}
 
-  .main{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;min-width:0}
+  /* ---------- 主区域（全屏目标，含播放器 + 聊天） ---------- */
+  .main{
+    flex:1 1 auto;display:flex;flex-direction:column;min-height:0;min-width:0;
+    background:#000;
+  }
+  .main:fullscreen{background:#000}
+  .main:-webkit-full-screen{background:#000}
 
-  /* 视频列（含房主换源栏 + 播放器） */
   .player-col{flex:0 0 auto;display:flex;flex-direction:column;min-width:0;min-height:0}
 
+  /* 房主换源栏 */
   .host-bar{
     display:flex;gap:8px;align-items:center;flex:0 0 auto;
     padding:8px 10px;background:var(--panel2);border-bottom:1px solid var(--line);
@@ -103,12 +109,31 @@
   }
   .fs-btn:hover{opacity:1;background:rgba(15,17,21,.92)}
 
-  /* 播放器全屏时铺满 */
-  .player-wrap:fullscreen{aspect-ratio:auto;width:100%;height:100%;flex:none;max-height:none}
-  .player-wrap:-webkit-full-screen{aspect-ratio:auto;width:100%;height:100%;flex:none;max-height:none}
+  /* ---------- 聊天面板 ---------- */
+  .chat{
+    flex:1 1 auto;min-height:0;display:flex;flex-direction:column;
+    background:var(--panel);border-top:1px solid var(--line);
+    transition:width .18s ease,height .18s ease,flex-basis .18s ease;
+  }
 
-  .chat{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:var(--panel);border-top:1px solid var(--line)}
-  .chat-head{display:none;padding:9px 12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);flex:0 0 auto}
+  .chat-head{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:9px 12px;font-size:12px;color:var(--muted);
+    border-bottom:1px solid var(--line);flex:0 0 auto;
+    cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+  }
+  .chat-head:hover{color:var(--text)}
+  .chat-head-label{letter-spacing:.5px}
+  .chat-head-right{display:inline-flex;align-items:center;gap:6px}
+  .collapse-icon{font-size:11px;opacity:.8;transition:transform .18s ease}
+
+  .unread-badge{
+    background:#ff5c5c;color:#fff;font-size:11px;font-weight:600;
+    min-width:18px;height:18px;padding:0 5px;border-radius:9px;
+    display:inline-flex;align-items:center;justify-content:center;line-height:1;
+    box-shadow:0 0 0 2px var(--panel);
+  }
+
   .messages{
     flex:1 1 auto;min-height:0;overflow-y:auto;padding:12px;
     display:flex;flex-direction:column;gap:10px;overscroll-behavior:contain;
@@ -136,7 +161,20 @@
   .chat-input button{padding:0 16px;border:0;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:600}
   .chat-input button:disabled{opacity:.5}
 
-  /* 竖屏时限制视频高度，给聊天留出空间 */
+  /* ---------- 折叠状态（竖屏：底部一条） ---------- */
+  .chat.collapsed{
+    flex:0 0 auto;
+    height:48px;min-height:48px;max-height:48px;
+  }
+  .chat.collapsed .messages,
+  .chat.collapsed .chat-input{display:none}
+  .chat.collapsed .chat-head{
+    flex:1 1 auto;border-bottom:0;justify-content:center;padding:0 14px;
+  }
+  .chat.collapsed .chat-head-label{display:none}
+  .chat.collapsed .collapse-icon{transform:rotate(180deg)}
+
+  /* 竖屏时限制视频高度，给聊天留空间 */
   @media (max-aspect-ratio:1/1){
     .player-wrap{max-height:46vh}
   }
@@ -146,10 +184,23 @@
     .main{flex-direction:row}
     .player-col{flex:1 1 auto;height:100%;min-width:0}
     .player-wrap{flex:1 1 auto;width:100%;height:auto;aspect-ratio:auto;max-height:none}
-    .chat{width:340px;flex:0 0 340px;border-top:0;border-left:1px solid var(--line)}
-    .chat-head{display:block}
+
+    .chat{
+      width:340px;flex:0 0 340px;border-top:0;border-left:1px solid var(--line);
+    }
+    /* 横屏折叠：变成右侧窄条 */
+    .chat.collapsed{
+      width:48px;flex:0 0 48px;
+      height:auto;min-height:0;max-height:none;
+    }
+    .chat.collapsed .chat-head{
+      flex-direction:column;gap:8px;padding:14px 0;justify-content:flex-start;
+    }
+    .chat.collapsed .chat-head-right{flex-direction:column;gap:6px}
+    .chat.collapsed .collapse-icon{transform:rotate(90deg)}
   }
 
+  /* ---------- Toast ---------- */
   .toast{
     position:fixed;left:50%;bottom:36px;transform:translate(-50%,12px);
     background:rgba(45,51,68,.96);color:#fff;padding:10px 18px;border-radius:10px;
@@ -165,7 +216,7 @@
 <div id="lobby">
   <div class="card">
     <h1>📺 一起看</h1>
-    <p class="sub">云端观影房</p>
+    <p class="sub"> 临时观影房 · 无需注册</p>
 
     <label for="nickInput">你的昵称</label>
     <input id="nickInput" type="text" maxlength="12" placeholder="给自己起个名字" autocomplete="nickname">
@@ -207,10 +258,10 @@
     </div>
   </header>
 
-  <div class="main">
+  <!-- 全屏目标：包含播放器 + 聊天 -->
+  <div class="main" id="mainWrap">
     <!-- 视频列 -->
     <div class="player-col">
-      <!-- 房主专属：换源栏（视频上方） -->
       <div id="hostBar" class="host-bar hidden">
         <span class="tag">房主</span>
         <input id="urlEdit" type="text" placeholder="换视频链接，回车同步给所有人…" spellcheck="false">
@@ -225,8 +276,15 @@
       </div>
     </div>
 
-    <aside class="chat">
-      <div class="chat-head">聊天</div>
+    <!-- 聊天面板 -->
+    <aside class="chat" id="chatPanel">
+      <div class="chat-head" id="chatHead" title="点击折叠 / 展开聊天">
+        <span class="chat-head-label">聊天</span>
+        <span class="chat-head-right">
+          <span id="unreadBadge" class="unread-badge" style="display:none">0</span>
+          <span class="collapse-icon" id="collapseIcon">▾</span>
+        </span>
+      </div>
       <div id="messages" class="messages"></div>
       <form id="chatForm" class="chat-input" autocomplete="off">
         <input id="chatInput" type="text" maxlength="500" placeholder="说点什么…">
@@ -242,10 +300,8 @@
   'use strict';
 
   /* ============ 配置 ============ */
-  // 如需自建信令服务器，改成：
-  // { host:'your.server', port:443, path:'/peerjs', secure:true, debug:1 }
   var PEER_OPTS = { debug: 1 };
-  var PREFIX = 'tvparty-v1-';   // peer id 前缀，避免撞名
+  var PREFIX = 'tvparty-v1-';
 
   /* ============ 状态 ============ */
   var state = {
@@ -255,12 +311,13 @@
     roomId: '',
     nick: '',
     url: '',
-    hostConn: null,          // 访客 -> 房主
-    conns: new Map(),        // 房主: peerId -> DataConnection
-    members: new Map()       // peerId -> nick
+    hostConn: null,
+    conns: new Map(),
+    members: new Map()
   };
 
   var hostRetries = 0;
+  var unreadCount = 0;
 
   /* ============ 小工具 ============ */
   function $(s) { return document.querySelector(s); }
@@ -296,12 +353,48 @@
       setTimeout(function () { el.remove(); }, 300);
     }, 1600);
   }
-  // 从粘贴内容里提取真正的 URL（兼容 iframe 代码）
   function extractUrl(raw) {
     var m = String(raw).match(/src\s*=\s*["']([^"']+)["']/i);
     return (m ? m[1] : String(raw)).trim();
   }
   function validUrl(url) { return /^https?:\/\//i.test(url); }
+
+  /* ============ 聊天折叠 / 未读 ============ */
+  var chatPanelEl = document.getElementById('chatPanel');
+  var unreadBadgeEl = document.getElementById('unreadBadge');
+
+  function isChatCollapsed() {
+    return chatPanelEl.classList.contains('collapsed');
+  }
+  function updateUnreadBadge() {
+    if (unreadCount > 0) {
+      unreadBadgeEl.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+      unreadBadgeEl.style.display = 'inline-flex';
+    } else {
+      unreadBadgeEl.style.display = 'none';
+    }
+  }
+  function noteUnread() {
+    if (!isChatCollapsed()) return;
+    unreadCount++;
+    updateUnreadBadge();
+  }
+  function toggleChat() {
+    if (isChatCollapsed()) {
+      // 展开
+      chatPanelEl.classList.remove('collapsed');
+      unreadCount = 0;
+      updateUnreadBadge();
+      requestAnimationFrame(function () {
+        var box = document.getElementById('messages');
+        box.scrollTop = box.scrollHeight;
+      });
+    } else {
+      // 折叠
+      chatPanelEl.classList.add('collapsed');
+    }
+  }
+  document.getElementById('chatHead').addEventListener('click', toggleChat);
 
   /* ============ 界面：大厅 ============ */
   document.querySelectorAll('.tab').forEach(function (btn) {
@@ -329,7 +422,7 @@
   $('#urlInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') createRoom(); });
   $('#roomInput').addEventListener('keydown', function (e) { if (e.key === 'Enter') joinRoom(); });
 
-  /* ============ 创建房间（成为房主） ============ */
+  /* ============ 创建房间 ============ */
   function createRoom() {
     if (typeof Peer === 'undefined') { showMsg('PeerJS 加载失败，请检查网络', true); return; }
 
@@ -378,7 +471,7 @@
     });
   }
 
-  /* ============ 加入房间（访客） ============ */
+  /* ============ 加入房间 ============ */
   function joinRoom() {
     if (typeof Peer === 'undefined') { showMsg('PeerJS 加载失败，请检查网络', true); return; }
 
@@ -456,7 +549,6 @@
     showScreen('room');
     $('#roomIdText').textContent = state.roomId;
 
-    // 房主：显示换源栏，并把当前链接填进去
     if (state.isHost) {
       $('#hostBar').classList.remove('hidden');
       $('#urlEdit').value = state.url;
@@ -509,7 +601,6 @@
       var nick = String(data.nick || '匿名').slice(0, 12);
       state.members.set(conn.peer, nick);
 
-      // 关键：把房主当前的视频链接下发给新加入的人
       safeSend(conn, {
         type: 'welcome',
         url: state.url,
@@ -551,7 +642,6 @@
       renderMembers();
 
     } else if (data.type === 'url') {
-      // 房主换了视频源，本机同步
       var u = String(data.url || '');
       if (u && u !== state.url) {
         state.url = u;
@@ -596,7 +686,6 @@
     $('#urlEdit').value = url;
     setPlayer(url);
 
-    // 同步给所有客户端
     broadcast({ type: 'url', url: url, by: state.nick });
 
     addSystem('已切换视频源');
@@ -608,14 +697,13 @@
     if (e.key === 'Enter') { e.preventDefault(); applyUrlChange(); }
   });
 
-  /* ============ 全屏 ============ */
-  var playerWrap = $('#playerWrap');
-  var fsBtn = $('#fsBtn');
+  /* ============ 全屏（作用于 mainWrap，含播放器 + 聊天） ============ */
+  var mainWrap = document.getElementById('mainWrap');
+  var fsBtn = document.getElementById('fsBtn');
 
-  // 检测浏览器是否支持元素全屏（iOS 上的 Safari 不支持）
-  var supportsFs = !!(playerWrap.requestFullscreen ||
-                      playerWrap.webkitRequestFullscreen ||
-                      playerWrap.msRequestFullscreen);
+  var supportsFs = !!(mainWrap.requestFullscreen ||
+                      mainWrap.webkitRequestFullscreen ||
+                      mainWrap.msRequestFullscreen);
   if (!supportsFs) fsBtn.classList.add('hidden');
 
   function fullscreenEl() {
@@ -626,7 +714,7 @@
   }
 
   function updateFsBtn() {
-    var isFs = fullscreenEl() === playerWrap;
+    var isFs = fullscreenEl() === mainWrap;
     fsBtn.textContent = isFs ? '⤡' : '⛶';
     fsBtn.title = isFs ? '退出全屏' : '全屏';
   }
@@ -642,13 +730,13 @@
       return;
     }
 
-    var req = playerWrap.requestFullscreen ||
-              playerWrap.webkitRequestFullscreen ||
-              playerWrap.msRequestFullscreen;
+    var req = mainWrap.requestFullscreen ||
+              mainWrap.webkitRequestFullscreen ||
+              mainWrap.msRequestFullscreen;
     if (!req) { toast('当前浏览器不支持全屏'); return; }
 
     try {
-      var p = req.call(playerWrap);
+      var p = req.call(mainWrap);
       if (p && typeof p.catch === 'function') {
         p.catch(function () { toast('无法进入全屏'); });
       }
@@ -663,7 +751,7 @@
     document.addEventListener(ev, updateFsBtn);
   });
 
-  // 键盘快捷键：F 全屏（输入框里不触发）
+  // F 键全屏（输入框里不触发）
   document.addEventListener('keydown', function (e) {
     var tag = (e.target && e.target.tagName) || '';
     if (tag === 'INPUT' || tag === 'TEXTAREA') return;
@@ -715,6 +803,8 @@
     el.appendChild(meta);
     el.appendChild(body);
     appendNode(el);
+
+    if (!self) noteUnread();
   }
 
   function addSystem(text) {
@@ -722,6 +812,7 @@
     el.className = 'sys';
     el.textContent = text;
     appendNode(el);
+    noteUnread();
   }
 
   function renderMembers() {
@@ -765,7 +856,6 @@
   function teardown() {
     state.connected = false;
 
-    // 若处于全屏，先退出
     if (fullscreenEl()) {
       var exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
       if (exit) { try { exit.call(document); } catch (e) {} }
@@ -798,6 +888,12 @@
     $('#hostBar').classList.add('hidden');
     $('#urlEdit').value = '';
     renderMembers();
+
+    // 重置聊天折叠 / 未读
+    chatPanelEl.classList.remove('collapsed');
+    unreadCount = 0;
+    updateUnreadBadge();
+    updateFsBtn();
   }
 
   window.addEventListener('pagehide', function () {
