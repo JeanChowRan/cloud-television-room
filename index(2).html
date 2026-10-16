@@ -1,0 +1,3727 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#0f1115">
+<title>一起看 · 即兴观影房</title>
+<style>
+:root{--bg:#0f1115;--panel:#171a21;--panel2:#1e2230;--line:#2a2f3d;--text:#e8eaed;--muted:#8b93a7;--accent:#4c8bf5;--accent2:#2f6fe0;--app-h:100vh;--safe-b:0px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,system-ui,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;overflow:hidden;position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:var(--app-h)}
+button{font-family:inherit;cursor:pointer;border:0;background:none;color:inherit;padding:0}
+input,textarea{font-family:inherit;-webkit-appearance:none;appearance:none;border-radius:0}
+.hidden{display:none!important}
+#envBar{position:fixed;top:0;left:0;right:0;z-index:10001;padding:6px 12px;padding-top:max(6px,env(safe-area-inset-top));background:#b37400;color:#fff;font-size:12px;text-align:center}
+#envBar.danger{background:#b83232}
+#lobby{height:var(--app-h);display:flex;align-items:center;justify-content:center;padding:24px 16px;overflow-y:auto}
+.card{width:100%;max-width:440px;background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:24px}
+.card h1{margin:0 0 4px;font-size:24px;letter-spacing:.5px}
+.sub{margin:0 0 6px;color:var(--muted);font-size:13px}
+label{display:block;font-size:13px;color:var(--muted);margin:16px 0 6px}
+input[type=text]{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#11141b;color:var(--text);font-size:16px;outline:none}
+input[type=text]:focus{border-color:var(--accent)}
+textarea{width:100%;padding:12px 14px;border-radius:10px;border:1px solid var(--line);background:#11141b;color:var(--text);font-size:15px;outline:none;resize:none;min-height:86px;line-height:1.5}
+textarea:focus{border-color:var(--accent)}
+.tabs{display:flex;gap:6px;margin-top:20px;background:#11141b;padding:4px;border-radius:10px}
+.tab{flex:1;padding:9px;border-radius:8px;background:transparent;color:var(--muted);font-size:14px;transition:.15s}
+.tab.active{background:var(--panel2);color:var(--text)}
+.pane{margin-top:16px}
+button.primary{width:100%;margin-top:18px;padding:13px;border-radius:10px;background:var(--accent);color:#fff;font-size:15px;font-weight:600;transition:.15s}
+button.primary:active{background:var(--accent2)}
+button.primary:disabled{opacity:.55;cursor:default}
+.hint{font-size:12px;color:var(--muted);margin:8px 0 0;line-height:1.6}
+.status{font-size:13px;color:var(--muted);margin:14px 0 0;min-height:18px;line-height:1.5}
+.status.error{color:#ff6b6b}
+.parse-preview{margin-top:10px;padding:10px 12px;background:rgba(76,139,245,.08);border:1px solid rgba(76,139,245,.3);border-radius:8px;font-size:12px;line-height:1.55;word-break:break-all}
+.parse-preview .label{color:var(--accent);font-weight:600;margin-right:4px}
+.parse-preview .url{color:var(--muted);font-size:11px;display:block;margin-top:4px}
+.parse-preview.error{background:rgba(255,107,107,.08);border-color:rgba(255,107,107,.3)}
+.parse-preview.error .label{color:#ff6b6b}
+.parse-preview.ok .label{color:#5dc48c}
+#room{height:var(--app-h);display:flex;flex-direction:column;overflow:hidden}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 12px;padding-top:max(8px,env(safe-area-inset-top));background:var(--panel);border-bottom:1px solid var(--line);flex:0 0 auto;flex-wrap:wrap}
+.room-id{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted);flex-wrap:wrap}
+.room-id strong{color:var(--text);font-size:16px;letter-spacing:2px}
+.topbar-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.ghost{border:1px solid var(--line);color:var(--muted);border-radius:8px;padding:5px 10px;font-size:12px;transition:.15s}
+.ghost:active{color:var(--text)}
+.ghost.danger{border-color:rgba(255,92,92,.5);color:#ff8a8a}
+.badge{background:var(--panel2);color:var(--muted);font-size:12px;padding:4px 10px;border-radius:999px;white-space:nowrap}
+.badge.live{background:rgba(255,92,92,.15);color:#ff8a8a;border:1px solid rgba(255,92,92,.4)}
+.role-tag{font-size:11px;padding:2px 8px;border-radius:6px;border:1px solid rgba(76,139,245,.55);color:var(--accent);background:rgba(76,139,245,.1)}
+.role-tag.guest{border-color:rgba(139,147,167,.5);color:var(--muted);background:rgba(139,147,167,.08)}
+.main{flex:1 1 auto;display:flex;flex-direction:column;min-height:0;min-width:0;overflow:hidden;background:#000}
+.player-col{position:relative;flex:0 0 auto;display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden}
+.host-bar{display:flex;gap:8px;align-items:center;flex:0 0 auto;padding:8px 10px;background:var(--panel2);border-bottom:1px solid var(--line);flex-wrap:wrap}
+.host-bar .tag{font-size:11px;color:var(--accent);border:1px solid rgba(76,139,245,.45);border-radius:6px;padding:2px 6px;flex:0 0 auto}
+.url-view{flex:1 1 140px;min-width:0;padding:9px 12px;border-radius:8px;background:#11141b;border:1px solid var(--line);cursor:pointer;font-size:14px;overflow:hidden;transition:border-color .15s}
+.url-view:hover{border-color:#3a4152}
+.url-view.guest{cursor:default}
+.url-view.guest:hover{border-color:var(--line)}
+.url-tag{color:var(--text);display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.url-tag.empty{color:var(--muted);font-style:italic}
+.url-input{flex:1 1 140px;min-width:0;padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:#11141b;color:var(--text);font-size:14px;outline:none}
+.url-input:focus{border-color:var(--accent)}
+.host-bar button{flex:0 0 auto;padding:9px 12px;border-radius:8px;background:var(--accent);color:#fff;font-size:13px;font-weight:600;transition:.15s}
+.host-bar button:active{background:var(--accent2)}
+.host-bar button.alt{background:#3a4152}
+.host-bar button.share-btn{background:#3a4152}
+.host-bar button.share-on{background:#d63a3a}
+.host-bar button.share-on::before{content:"";display:inline-block;vertical-align:middle;width:8px;height:8px;border-radius:50%;background:#fff;margin-right:5px;animation:pulse 1.2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.player-outer{position:relative;flex:0 0 auto;width:100%;height:240px;background:#000;overflow:hidden}
+.player-wrap{position:absolute;top:0;left:0;right:0;bottom:0;background:#000;overflow:hidden;touch-action:none}
+.viewport-layer{position:absolute;top:0;left:0;-webkit-transform-origin:0 0;transform-origin:0 0;will-change:transform}
+.view-layer{position:absolute;top:0;left:0;width:100%;height:100%;-webkit-transform-origin:50% 50%;transform-origin:50% 50%;will-change:transform;transition:transform .15s ease-out}
+.view-layer.no-transition{transition:none}
+.view-layer iframe{position:absolute;top:0;left:0;width:100%;height:100%;border:0;display:block;background:#000}
+.placeholder{position:absolute;top:0;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:center;color:#4d5568;font-size:14px;background:#000;pointer-events:none}
+.player-wrap.hand-mode{cursor:grab;box-shadow:inset 0 0 0 2px var(--accent)}
+.player-wrap.hand-mode iframe{pointer-events:none}
+.share-layer{position:absolute;top:0;left:0;right:0;bottom:0;z-index:18;background:#000;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.share-layer video{width:100%;height:100%;object-fit:contain;background:#000;display:block}
+.share-badge{position:absolute;top:12px;left:12px;z-index:2;background:rgba(214,58,58,.9);color:#fff;padding:5px 10px;border-radius:8px;font-size:11px;display:inline-flex;align-items:center}
+.share-badge::before{content:"";display:inline-block;width:7px;height:7px;border-radius:50%;background:#fff;margin-right:5px;animation:pulse 1.2s infinite}
+.share-back{position:absolute;top:12px;right:12px;z-index:3;background:rgba(15,17,21,.75);color:#fff;padding:8px 14px;border-radius:9px;font-size:12px;border:1px solid rgba(255,255,255,.15)}
+.share-back.share-fs{top:auto;bottom:16px;right:16px}
+.share-unmute{position:absolute;bottom:16px;left:50%;margin-left:-70px;z-index:3;background:var(--accent);color:#fff;padding:10px 18px;border-radius:24px;font-size:13px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.5)}
+.share-play-overlay{position:absolute;top:0;left:0;right:0;bottom:0;z-index:4;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,.55)}
+.share-play-overlay button{background:var(--accent);color:#fff;padding:14px 26px;border-radius:12px;font-size:15px;font-weight:600;box-shadow:0 8px 24px rgba(0,0,0,.6)}
+.view-ctrl{position:absolute;bottom:12px;left:50%;margin-left:-135px;z-index:15;display:flex;align-items:center;background:rgba(15,17,21,.78);border-radius:11px;padding:4px 6px;box-shadow:0 4px 16px rgba(0,0,0,.45);opacity:.82;transition:opacity .18s}
+.view-ctrl:active{opacity:1}
+.view-ctrl button{width:34px;height:32px;border-radius:7px;background:transparent;color:#fff;font-size:16px;display:flex;align-items:center;justify-content:center;padding:0}
+.view-ctrl button:active{background:rgba(255,255,255,.14)}
+.view-ctrl button.active{background:var(--accent);color:#fff}
+.view-ctrl .zoom-label{font-size:12px;color:#fff;min-width:44px;text-align:center;font-variant-numeric:tabular-nums;padding:0 2px}
+.view-ctrl .sep{width:1px;height:18px;background:rgba(255,255,255,.18);margin:0 3px}
+.hand-hint{position:absolute;top:60px;left:50%;margin-left:-130px;z-index:15;background:rgba(76,139,245,.95);color:#fff;padding:7px 14px;border-radius:9px;font-size:12px;line-height:1.4;width:260px;text-align:center;pointer-events:none}
+.fs-btn{position:absolute;top:12px;right:12px;z-index:20;width:42px;height:42px;border-radius:10px;background:rgba(15,17,21,.65);color:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 10px rgba(0,0,0,.4);opacity:.85;font-size:18px;padding:0}
+
+/* ============ 悬浮窗模式 ============ */
+.player-outer.floating{
+  position:fixed;
+  top:0;left:0;
+  right:auto;bottom:auto;
+  margin:0;
+  z-index:9500;
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:0 14px 44px rgba(0,0,0,.75),0 0 0 1.5px rgba(76,139,245,.65);
+  background:#000;
+}
+.player-outer.floating .view-ctrl,
+.player-outer.floating .fs-btn{display:none!important;}
+.float-handle{
+  display:none;
+  position:absolute;
+  top:0;left:0;right:0;
+  height:20px;
+  background:linear-gradient(180deg,rgba(76,139,245,.88),rgba(76,139,245,.30));
+  color:#fff;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 8px;
+  font-size:10px;
+  line-height:20px;
+  z-index:26;
+  pointer-events:none;
+  border-radius:12px 12px 0 0;
+  white-space:nowrap;
+  overflow:hidden;
+}
+.player-outer.floating .float-handle{display:flex;}
+.float-handle .hint{opacity:.85;}
+.float-handle .size-label{font-weight:600;font-variant-numeric:tabular-nums;}
+.float-exit{
+  display:none;
+  position:absolute;
+  top:24px;right:6px;
+  z-index:27;
+  background:rgba(15,17,21,.86);
+  color:#fff;
+  padding:5px 9px;
+  border-radius:7px;
+  font-size:11px;
+  border:1px solid rgba(255,255,255,.2);
+  cursor:pointer;
+  line-height:1;
+}
+.player-outer.floating .float-exit{display:block;}
+.float-overlay{
+  display:none;
+  position:absolute;
+  top:0;left:0;right:0;bottom:0;
+  z-index:22;
+  background:transparent;
+  touch-action:none;
+  cursor:move;
+}
+.player-outer.floating .float-overlay{display:block;}
+
+.chat{flex:1 1 auto;min-height:0;display:flex;flex-direction:column;background:var(--panel);border-top:1px solid var(--line);overflow:hidden}
+.chat-head{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);flex:0 0 auto;cursor:pointer;user-select:none}
+.chat-head-label{letter-spacing:.5px}
+.chat-head-right{display:inline-flex;align-items:center}
+.collapse-icon{font-size:11px;opacity:.8;transition:transform .18s ease;margin-left:6px}
+.unread-badge{background:#ff5c5c;color:#fff;font-size:11px;font-weight:600;min-width:18px;height:18px;padding:0 5px;border-radius:9px;display:inline-flex;align-items:center;justify-content:center;line-height:1;box-shadow:0 0 0 2px var(--panel)}
+.messages{flex:1 1 auto;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:12px;display:flex;flex-direction:column;overscroll-behavior:contain}
+.load-more-hint{align-self:center;font-size:11px;color:var(--accent);padding:6px 12px;margin-bottom:8px;background:var(--panel2);border-radius:10px;text-align:center;cursor:pointer;flex:0 0 auto}
+.load-more-hint:active{background:rgba(76,139,245,.15)}
+.msg{display:flex;flex-direction:column;align-items:flex-start;max-width:88%;align-self:flex-start;margin-bottom:10px}
+.msg.self{align-self:flex-end;align-items:flex-end}
+.msg .meta{font-size:11px;color:var(--muted);margin-bottom:3px}
+.msg .body{background:var(--panel2);padding:8px 12px;border-radius:12px;font-size:14px;line-height:1.5;word-break:break-word;white-space:pre-wrap;max-width:100%}
+.msg.self .body{background:var(--accent);color:#fff}
+.msg .body.img-body{padding:4px;background:transparent;border:1px solid var(--line)}
+.msg.self .body.img-body{background:transparent;border-color:var(--accent)}
+.msg-img{display:block;max-width:min(65vw,320px);max-height:min(60vh,360px);border-radius:8px;cursor:pointer;object-fit:cover}
+.audio-msg{display:flex;align-items:center;gap:8px;min-width:120px}
+.audio-play-btn{width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.18);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 auto;padding:0;font-size:12px;line-height:1}
+.msg.self .audio-play-btn{background:rgba(255,255,255,.28)}
+.audio-waves{flex:1;height:24px;display:flex;align-items:center;gap:2px}
+.audio-waves span{display:block;width:2px;height:12px;border-radius:1px;background:rgba(255,255,255,.55)}
+.msg:not(.self) .audio-waves span{background:rgba(139,147,167,.8)}
+.audio-dur{font-size:12px;color:var(--muted);margin-left:4px}
+.sys{align-self:center;font-size:12px;color:var(--muted);text-align:center;max-width:92%;line-height:1.5;margin-bottom:10px}
+.sys.error{color:#ff8a8a}
+.sys.highlight{color:#ffc83c;font-weight:600}
+.term-card{margin-top:6px;border:1px solid var(--line);border-radius:10px;background:var(--panel);overflow:hidden;font-size:13px;width:100%;min-width:220px}
+.term-header{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:linear-gradient(90deg,rgba(76,139,245,.15),rgba(76,139,245,.05));cursor:pointer;user-select:none}
+.term-card.expanded .term-header{border-bottom:1px solid var(--line)}
+.term-header-title{display:flex;align-items:center;gap:6px;color:var(--accent);font-weight:600;font-size:12.5px;flex:1;min-width:0}
+.term-header-title .q{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.term-header-toggle{font-size:11px;color:var(--muted);flex:0 0 auto;margin-left:8px}
+.term-content{padding:10px 12px}
+.term-content.hidden{display:none}
+.term-loading{text-align:center;color:var(--muted);font-size:12px;padding:8px 0}
+.term-intro{font-size:12px;color:var(--muted);margin-bottom:8px}
+.term-choices{list-style:none;padding:0;margin:0 0 8px 0}
+.term-choice{display:flex;align-items:baseline;gap:8px;padding:8px 10px;border-radius:8px;background:var(--panel2);margin-bottom:6px;cursor:pointer;transition:background .15s}
+.term-choice:active{background:rgba(76,139,245,.15)}
+.term-choice .num{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;font-weight:600;flex:0 0 auto}
+.term-choice .title{font-weight:600;font-size:13px;color:var(--text)}
+.term-choice .desc{font-size:11px;color:var(--muted);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.term-more{font-size:11px;color:var(--muted);text-align:center;margin-bottom:6px}
+.term-hint{font-size:11px;color:var(--muted);text-align:center;padding-top:6px;border-top:1px dashed var(--line)}
+.term-body{display:flex;gap:10px;align-items:flex-start}
+.term-img{width:84px;height:84px;object-fit:cover;border-radius:8px;flex:0 0 auto;background:var(--panel2)}
+.term-text{flex:1;min-width:0;font-size:12.5px;line-height:1.5;max-height:110px;overflow-y:auto}
+.term-title{font-weight:600;color:var(--accent);margin-bottom:4px}
+.term-abstract{color:var(--text)}
+.term-meta{display:flex;align-items:center;justify-content:space-between;margin-top:8px;padding-top:8px;border-top:1px dashed var(--line)}
+.term-source{font-size:11px;color:var(--muted)}
+.term-link{color:var(--accent);font-size:12px;text-decoration:none;font-weight:600}
+.term-not-found{color:var(--muted);font-size:13px;text-align:center;padding:10px 0;line-height:1.6}
+.term-not-found .q{color:var(--text);font-weight:600}
+.term-not-found .hint{font-size:11px;color:var(--muted)}
+.term-src-tag{font-size:11px;color:var(--accent);border:1px solid rgba(76,139,245,.4);border-radius:6px;padding:1px 6px;margin-left:6px;flex:0 0 auto}
+.term-warn{font-size:12px;color:#ffc83c;background:rgba(255,200,60,.08);border:1px solid rgba(255,200,60,.28);border-radius:8px;padding:8px 10px;line-height:1.6;margin-bottom:8px;word-break:break-word}
+.term-actions{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.term-actions a,.term-actions button{font-size:12px;padding:6px 10px;border-radius:8px;background:var(--panel2);color:var(--text);text-decoration:none;border:1px solid var(--line)}
+.term-actions button.retry{background:var(--accent);color:#fff;border-color:transparent;font-weight:600}
+.term-actions a:active,.term-actions button:active{opacity:.8}
+.chat-input{flex:0 0 auto;display:flex;flex-direction:column;padding:8px 10px;padding-bottom:calc(8px + var(--safe-b));border-top:1px solid var(--line);background:var(--panel)}
+.chat-input .row{display:flex;align-items:center;width:100%}
+.chat-input .toolbar{display:flex;gap:4px;margin-right:6px;flex:0 0 auto}
+.tool-btn{width:36px;height:36px;border-radius:9px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0;flex:0 0 auto;font-size:16px;line-height:1}
+.tool-btn:active,.tool-btn.active{background:var(--panel2);color:var(--text)}
+.chat-input input[type=text]{flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid var(--line);background:#11141b;color:var(--text);font-size:16px;outline:none}
+.chat-input input[type=text]:focus{border-color:var(--accent)}
+.chat-input .send-btn{padding:0 14px;height:38px;border-radius:10px;background:var(--accent);color:#fff;font-size:14px;font-weight:600;margin-left:6px;flex:0 0 auto}
+.recording-bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:rgba(214,58,58,.15);border-radius:8px;border:1px solid rgba(214,58,58,.35);width:100%;margin-top:6px}
+.recording-bar .dot{width:10px;height:10px;border-radius:50%;background:#d63a3a;animation:pulse 1s infinite}
+.recording-bar .time{color:#ff8a8a;font-size:13px;font-variant-numeric:tabular-nums;min-width:44px}
+.recording-bar .spacer{flex:1}
+.recording-bar button{padding:5px 12px;border-radius:6px;font-size:12px;font-weight:600;color:#fff}
+.recording-bar .cancel{background:transparent;border:1px solid rgba(255,255,255,.2);color:#ff8a8a}
+.recording-bar .stop{background:#d63a3a}
+.emoji-panel{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;padding:8px;background:var(--panel2);border-top:1px solid var(--line);max-height:200px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.emoji-panel button{font-size:22px;padding:6px;border-radius:8px;background:transparent;line-height:1;min-height:36px}
+.emoji-panel button:active{background:rgba(255,255,255,.1)}
+@media (max-width:380px){.emoji-panel{grid-template-columns:repeat(7,1fr)}.emoji-panel button{font-size:20px;padding:4px}}
+.chat.collapsed{flex:0 0 auto;height:46px;min-height:46px;max-height:46px}
+.chat.collapsed .messages,.chat.collapsed .chat-input,.chat.collapsed .emoji-panel{display:none}
+.chat.collapsed .chat-head{flex:1 1 auto;border-bottom:0;justify-content:center;padding:0 14px}
+.chat.collapsed .chat-head-label{display:none}
+.chat.collapsed .collapse-icon{transform:rotate(180deg)}
+.main:fullscreen,.main:-webkit-full-screen,.main.is-fullscreen{background:#000;flex-direction:column;overflow:hidden}
+.main:fullscreen .player-col,.main:-webkit-full-screen .player-col,.main.is-fullscreen .player-col{flex:1 1 auto;height:100%;min-height:0;overflow:hidden}
+.main:fullscreen .player-outer,.main:-webkit-full-screen .player-outer,.main.is-fullscreen .player-outer{flex:1 1 auto;height:auto!important;min-height:0;max-height:none}
+.main:fullscreen .chat,.main:-webkit-full-screen .chat,.main.is-fullscreen .chat{position:fixed;right:16px;bottom:16px;top:auto;left:auto;flex:none;width:320px;max-width:calc(100vw - 32px);height:55vh;max-height:480px;min-height:220px;border:1px solid var(--line);border-radius:14px;background:var(--panel);box-shadow:0 12px 40px rgba(0,0,0,.7);overflow:hidden;z-index:10001}
+.main:fullscreen .chat.collapsed,.main:-webkit-full-screen .chat.collapsed,.main.is-fullscreen .chat.collapsed{width:56px;height:56px;min-height:0;max-height:none;border-radius:50%}
+.main:fullscreen .chat.collapsed .messages,.main:fullscreen .chat.collapsed .chat-input,.main:fullscreen .chat.collapsed .emoji-panel,.main:-webkit-full-screen .chat.collapsed .messages,.main:-webkit-full-screen .chat.collapsed .chat-input,.main:-webkit-full-screen .chat.collapsed .emoji-panel,.main.is-fullscreen .chat.collapsed .messages,.main.is-fullscreen .chat.collapsed .chat-input,.main.is-fullscreen .chat.collapsed .emoji-panel{display:none}
+.main:fullscreen .chat.collapsed .chat-head,.main:-webkit-full-screen .chat.collapsed .chat-head,.main.is-fullscreen .chat.collapsed .chat-head{width:100%;height:100%;padding:0;border:0;display:flex;align-items:center;justify-content:center;background:var(--accent);border-radius:50%;position:relative}
+.main:fullscreen .chat.collapsed .chat-head-label,.main:fullscreen .chat.collapsed .collapse-icon,.main:-webkit-full-screen .chat.collapsed .chat-head-label,.main:-webkit-full-screen .chat.collapsed .collapse-icon,.main.is-fullscreen .chat.collapsed .chat-head-label,.main.is-fullscreen .chat.collapsed .collapse-icon{display:none}
+.main:fullscreen .chat.collapsed .chat-head::before,.main:-webkit-full-screen .chat.collapsed .chat-head::before,.main.is-fullscreen .chat.collapsed .chat-head::before{content:"";display:block;width:26px;height:26px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='white'%3E%3Cpath d='M20 2H4a2 2 0 0 0-2 2v18l4-4h14a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z'/%3E%3C/svg%3E");background-size:contain;background-repeat:no-repeat;background-position:center}
+.main:fullscreen .chat.collapsed .chat-head-right,.main:-webkit-full-screen .chat.collapsed .chat-head-right,.main.is-fullscreen .chat.collapsed .chat-head-right{position:absolute;top:-4px;right:-4px;display:inline-flex}
+.main:fullscreen .chat.collapsed .unread-badge,.main:-webkit-full-screen .chat.collapsed .unread-badge,.main.is-fullscreen .chat.collapsed .unread-badge{box-shadow:0 0 0 3px var(--bg)}
+.toast{position:fixed;left:50%;bottom:calc(36px + var(--safe-b));transform:translate(-50%,12px);background:rgba(45,51,68,.96);color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;opacity:0;transition:.25s;pointer-events:none;z-index:20000;max-width:80vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+.loading-overlay{position:fixed;top:0;left:0;right:0;bottom:0;z-index:25000;background:rgba(15,17,21,.92);display:flex;align-items:center;justify-content:center}
+.loading-box{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:32px 28px;text-align:center;min-width:260px;max-width:calc(100vw - 48px);box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.spinner{width:48px;height:48px;margin:0 auto 20px;border:3px solid rgba(76,139,245,.2);border-top-color:var(--accent);border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:15px;color:var(--text);margin-bottom:6px;line-height:1.5}
+.loading-sub{font-size:12px;color:var(--muted);line-height:1.5}
+.lightbox{position:fixed;top:0;left:0;right:0;bottom:0;z-index:30000;background:rgba(0,0,0,.94);display:flex;align-items:center;justify-content:center}
+.lightbox img{max-width:95vw;max-height:95vh;object-fit:contain;border-radius:6px}
+.lightbox .close{position:absolute;top:14px;right:14px;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.14);color:#fff;display:flex;align-items:center;justify-content:center;font-size:20px}
+.main.is-fullscreen{position:fixed;top:0;left:0;right:0;bottom:0;z-index:9000}
+#shareLayer .share-badge,#shareLayer .share-back,#shareLayer .share-unmute,#shareLayer .share-fs{z-index:5}
+@media (min-width:900px){
+  .main{flex-direction:row}
+  .player-col{flex:1 1 auto;min-width:0}
+  .chat{flex:0 0 340px;width:340px;max-width:46vw;border-top:0;border-left:1px solid var(--line)}
+  .chat.collapsed{flex:0 0 46px;width:46px;height:auto;max-height:none;min-height:0}
+  .chat.collapsed .chat-head{flex:1 1 auto;height:100%;border-bottom:0;padding:0 0;justify-content:center}
+  .chat.collapsed .chat-head-label{display:none}
+  .emoji-panel{grid-template-columns:repeat(10,1fr)}
+}
+@media (min-width:1400px){.chat{flex:0 0 380px;width:380px}}
+</style>
+</head>
+<body>
+
+<div id="envBar" class="hidden"></div>
+
+<div id="lobby">
+  <div class="card">
+    <h1>📺 一起看</h1>
+    <p class="sub">即兴观影房 · 浏览器直连 · 无需注册</p>
+    <label for="nickInput">你的昵称</label>
+    <input id="nickInput" type="text" maxlength="12" placeholder="给自己起个名字" autocomplete="nickname">
+    <div class="tabs">
+      <button class="tab active" data-tab="create" type="button">创建房间</button>
+      <button class="tab" data-tab="join" type="button">加入房间</button>
+    </div>
+    <div id="createPane" class="pane">
+      <label for="urlInput">粘贴视频链接或分享文本</label>
+      <textarea id="urlInput" placeholder="粘贴 B站分享文本、BV号、av号、b23.tv短链、bilibili.com链接，或任意可嵌入网页链接"></textarea>
+      <div id="parsePreview" class="parse-preview hidden"></div>
+      <p class="hint">支持：B站分享文本（BV/AV/b23.tv 自动识别）、bilibili.com 链接、任意可嵌入网页。</p>
+      <p class="hint">进房后点顶部「邀请链接」复制分享地址，朋友打开即自动进房；聊天里 @du词条[关键词] 可查百科；手机上可用「共享摄像头」代替共享屏幕。</p>
+      <p class="hint">悬浮窗：点播放器下方 🪟 按钮进入，拖动可移动，双击可循环缩放（小→中→大→超大→小）；快捷键 P。</p>
+      <button id="createBtn" class="primary" type="button">创建房间</button>
+    </div>
+    <div id="joinPane" class="pane hidden">
+      <label for="roomInput">房间号</label>
+      <input id="roomInput" type="text" inputmode="numeric" maxlength="6" placeholder="6 位数字">
+      <button id="joinBtn" class="primary" type="button">加入房间</button>
+    </div>
+    <p id="lobbyMsg" class="status"></p>
+  </div>
+</div>
+
+<div id="room" class="hidden">
+  <header class="topbar">
+    <div class="room-id">
+      <span>房间</span>
+      <strong id="roomIdText">------</strong>
+      <span id="roleTag" class="role-tag">房主</span>
+      <button id="copyBtn" class="ghost" type="button" title="复制邀请链接（房号 + 当前视频）">邀请链接</button>
+    </div>
+    <div class="topbar-right">
+      <span id="shareBadge" class="badge live hidden">📡 共享中</span>
+      <span id="memberCount" class="badge">1 人</span>
+      <button id="leaveBtn" class="ghost danger" type="button">退出</button>
+    </div>
+  </header>
+
+  <div class="main" id="mainWrap">
+    <div class="player-col">
+      <div id="hostBar" class="host-bar">
+        <span class="tag" id="hostBarTag">房主</span>
+        <div class="url-view" id="urlView" title="点击编辑链接">
+          <span class="url-tag empty" id="urlTag">未设置链接</span>
+        </div>
+        <input id="urlEdit" class="url-input hidden" type="text" placeholder="粘贴分享文本 / BV 号 / 链接" spellcheck="false">
+        <button id="copyUrlBtn" type="button" class="hidden">复制</button>
+        <button id="applyUrlBtn" type="button">同步</button>
+        <button id="pullUrlBtn" class="alt hidden" type="button" title="向房主重新获取当前播放链接">刷新链接</button>
+        <button id="shareBtn" class="share-btn hidden" type="button">共享屏幕</button>
+        <button id="camSwitchBtn" class="alt hidden" type="button" title="切换前后摄像头">换镜头</button>
+      </div>
+
+      <div class="player-outer" id="playerOuter">
+        <div class="player-wrap" id="playerWrap">
+          <div class="viewport-layer" id="viewportLayer">
+            <div class="view-layer" id="viewLayer">
+              <iframe id="player" title="视频" allowfullscreen referrerpolicy="no-referrer"
+                allow="autoplay; fullscreen; encrypted-media; picture-in-picture; clipboard-write"
+                webkitallowfullscreen mozallowfullscreen></iframe>
+              <div id="playerPlaceholder" class="placeholder">等待视频…</div>
+            </div>
+          </div>
+          <div class="share-layer hidden" id="shareLayer">
+            <video id="shareVideo" playsinline webkit-playsinline autoplay muted></video>
+            <div class="share-badge" id="shareBadgeText">房主共享中</div>
+            <button class="share-back" id="shareBackBtn" type="button">切换到本地</button>
+            <button class="share-back share-fs" id="shareFsBtn" type="button">⛶ 全屏</button>
+            <button class="share-unmute hidden" id="shareUnmuteBtn" type="button">🔊 开启声音</button>
+            <div class="share-play-overlay hidden" id="sharePlayOverlay">
+              <button id="sharePlayBtn" type="button">▶ 点击播放</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="view-ctrl" id="viewCtrl">
+          <button id="zoomOutBtn" type="button" title="缩小">−</button>
+          <span id="zoomLabel" class="zoom-label">100%</span>
+          <button id="zoomInBtn" type="button" title="放大">+</button>
+          <span class="sep"></span>
+          <button id="handModeBtn" type="button" title="手动微调">✋</button>
+          <button id="resetViewBtn" type="button" title="重置">⟲</button>
+          <span class="sep"></span>
+          <button id="floatModeBtn" type="button" title="悬浮窗（可拖动 / 双击缩放）">🪟</button>
+        </div>
+
+        <button id="fsBtn" class="fs-btn" type="button" title="全屏 (F)">⛶</button>
+      </div>
+    </div>
+
+    <aside class="chat" id="chatPanel">
+      <div class="chat-head" id="chatHead">
+        <span class="chat-head-label">聊天</span>
+        <span class="chat-head-right">
+          <span id="unreadBadge" class="unread-badge" style="display:none">0</span>
+          <span class="collapse-icon" id="collapseIcon">▾</span>
+        </span>
+      </div>
+      <div id="messages" class="messages"></div>
+      <div id="emojiPanel" class="emoji-panel hidden"></div>
+      <form id="chatForm" class="chat-input" autocomplete="off">
+        <div class="row">
+          <div class="toolbar">
+            <button type="button" id="emojiBtn" class="tool-btn" title="表情">😀</button>
+            <button type="button" id="imgBtn" class="tool-btn" title="图片">📷</button>
+            <button type="button" id="micBtn" class="tool-btn hidden" title="语音">🎤</button>
+          </div>
+          <input id="chatInput" type="text" maxlength="2000" placeholder="说点什么… 试试 @du苹果">
+          <button type="submit" class="send-btn">发送</button>
+        </div>
+        <input type="file" id="imgFile" accept="image/*" class="hidden">
+        <div id="recordingBar" class="recording-bar hidden">
+          <span class="dot"></span>
+          <span id="recTime" class="time">0:00</span>
+          <span class="spacer"></span>
+          <button type="button" class="cancel" id="recCancel">取消</button>
+          <button type="button" class="stop" id="recStop">发送</button>
+        </div>
+      </form>
+    </aside>
+  </div>
+</div>
+
+<div id="lightbox" class="lightbox hidden">
+  <button class="close" id="lightboxClose" type="button">✕</button>
+  <img id="lightboxImg" alt="">
+</div>
+
+<div id="loadingOverlay" class="loading-overlay hidden">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">正在处理…</div>
+    <div class="loading-sub" id="loadingSub">请稍候</div>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ==================== 环境检测 ==================== */
+var UA=navigator.userAgent||'';
+var env={
+  isWechat:/MicroMessenger/i.test(UA),
+  isIOS:/iPad|iPhone|iPod/.test(UA)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1),
+  isAndroid:/Android|Adr\b|HarmonyOS/i.test(UA),
+  isMobile:/Android|iPhone|iPad|iPod|Mobile|HarmonyOS|MicroMessenger/i.test(UA),
+  isEdge:/Edg\//i.test(UA)||/Edge\//i.test(UA),
+  isChrome:/Chrome\/|CriOS\//i.test(UA)&&!/Edg\//i.test(UA),
+  isSafari:/Safari\//i.test(UA)&&!/Chrome\/|CriOS\/|Chromium\//i.test(UA),
+  isFile:location.protocol==='file:',
+  hasWebRTC:!!(window.RTCPeerConnection||window.webkitRTCPeerConnection||window.mozRTCPeerConnection),
+  hasFetch:typeof window.fetch==='function',
+  isSecure:(location.protocol==='https:')||(location.protocol==='file:')||(location.hostname==='localhost')||(location.hostname==='127.0.0.1'),
+  hasDisplayMedia:!!(navigator.mediaDevices&&(navigator.mediaDevices.getDisplayMedia||navigator.mediaDevices.webkitGetDisplayMedia)),
+  hasUserMedia:!!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia),
+  hasUserMediaLegacy:!!(navigator.webkitGetUserMedia||navigator.mozGetUserMedia||navigator.msGetUserMedia),
+  hasMediaRecorder:typeof window.MediaRecorder!=='undefined',
+  hasBigInt:typeof window.BigInt!=='undefined'
+};
+env.hasDisplayMedia=env.hasDisplayMedia&&!env.isIOS;
+env.canShareScreen=env.hasDisplayMedia&&!env.isWechat;
+env.canShareCamera=env.hasUserMedia||env.hasUserMediaLegacy;
+if(!env.canShareCamera||!env.hasMediaRecorder)env.hasMediaRecorder=false;
+
+/* ==================== 常量 ==================== */
+var CHUNK_SIZE=3000;
+var MAX_IMG_DIM=960, IMG_QUALITY=0.6;
+var MAX_MEDIA_BYTES=1.5*1024*1024;
+var MEDIA_SEND_INTERVAL=30;
+var MEDIA_SEND_COOLDOWN=1500;
+var HEARTBEAT_INTERVAL=25000;
+var REC_MAX_DURATION=20000;
+var CHAT_INITIAL=50;
+var CHAT_LOAD_MORE=25;
+var HISTORY_SYNC_COUNT=25;
+var HISTORY_CLIENT_SYNC=100;
+var HISTORY_MAX=300;
+var HISTORY_SEND_BATCH=20;
+var HISTORY_SEND_GAP=250;
+var PENDING_CHOICE_TTL=120000;
+var SESSION_KEY='tvparty_session_v1';
+var SESSION_TTL=2*60*60*1000;
+var IDENTITY_KEY='tvparty_identity_v1';
+var TERM_TOTAL_TIMEOUT=9000;
+var TERM_ATTEMPT_TIMEOUT=6000;
+var TERM_MAX_RETRY=5;
+var TERM_CACHE_TTL=10*60*1000;
+var TERM_CACHE_MAX=120;
+
+var EMOJI_LIST=['😀','😃','😄','😁','😆','😅','😂','🤣','😊','😇','🙂','🙃','😉','😌','😍','🥰','😘','😗','😙','😚','😋','😛','😝','😜','🤪','🤨','🧐','🤓','😎','🤩','🥳','😏','😒','😞','😔','😟','😕','🙁','☹️','😣','😖','😫','😩','🥺','😢','😭','😤','😠','😡','🤬','🤯','😳','🥵','🥶','😱','😨','😰','😥','😓','🤗','🤔','🤭','🤫','🤥','😶','😐','😑','😬','🙄','😯','😦','😧','😮','😲','🥱','😴','🤤','😪','😵','🤐','🥴','🤢','🤮','🤧','😷','🤒','🤕','🤑','🤠','😈','👿','👹','👺','🤡','💩','👻','💀','☠️','👽','👾','🤖','🎃','❤️','🧡','💛','💚','💙','💜','🖤','🤍','🤎','💔','❣️','💕','💞','💓','💗','💖','💘','💝','💟','👍','👎','👏','🙌','👐','🤲','🤝','🙏','✌️','🤞','🤟','🤘','👌','🤌','🤏','👈','👉','👆','👇','☝️','✋','🤚','🖐️','🖖','👋','🤙','💪','🦾','🖕','✍️','🤳','💅','🔥','✨','⭐','🌟','💫','⚡','💥','💢','💦','💨','💣','💬','💭','💤','💯','🎉','🎊','🎈','🎁','🎀','🎂','🍰','🍕','🍔','🍟','🍿','🍺','🍻','🥂','🍷','🥤','☕','🍵','🍜','🍚','🍣','🍎','🍌','🍇','🍓','🍉','🍑','🍒','🥝','🍍','🎬','🎮','🎯','🎲','🎰','🏆','🏅','🥇','🥈','🥉','⚽','🏀','🏈','⚾','🎾','🏐','🎱','🏓','🏸','🥊','🥋','⛳','🎣'];
+
+var BOT_TAGS={'du':{name:'百科',source:'wiki'},'bk':{name:'百科',source:'wiki'},'baike':{name:'百科',source:'wiki'},'wiki':{name:'百科',source:'wiki'}};
+
+/* ==================== 工具函数 ==================== */
+function $(s){ return document.querySelector(s); }
+function safeBind(selector, event, handler){
+  try{
+    var el=document.querySelector(selector);
+    if(el) el.addEventListener(event, handler, false);
+  }catch(e){ console.warn('[bind] error:', selector, e); }
+}
+function randomRoomId(){ return String(Math.floor(100000+Math.random()*900000)); }
+function hostPeerIdForRoom(id){ return 'tp3'+id+'h'; }
+function pad2(n){ return (n<10?'0':'')+n; }
+function fmtTime(ts){ var d=new Date(ts||Date.now()); return pad2(d.getHours())+':'+pad2(d.getMinutes()); }
+function fmtDur(s){ s=Math.round(s); if(s<60) return s+'"'; return Math.floor(s/60)+"'"+pad2(s%60)+'"'; }
+function showMsg(t,e){ var el=$('#lobbyMsg'); if(!el) return; el.textContent=t||''; el.classList.toggle('error',!!e); }
+function setLobbyBusy(b,t){ var cb=$('#createBtn'), jb=$('#joinBtn'); if(cb) cb.disabled=b; if(jb) jb.disabled=b; if(t!==undefined) showMsg(t,false); }
+function showScreen(n){ var l=$('#lobby'), r=$('#room'); if(l) l.classList.toggle('hidden',n!=='lobby'); if(r) r.classList.toggle('hidden',n!=='room'); }
+function toast(t){
+  try{
+    var el=document.createElement('div'); el.className='toast'; el.textContent=t; document.body.appendChild(el);
+    setTimeout(function(){ el.classList.add('show'); }, 10);
+    setTimeout(function(){ el.classList.remove('show'); setTimeout(function(){ if(el.parentNode) el.parentNode.removeChild(el); },300); },1600);
+  }catch(e){}
+}
+function escapeHtml(s){ return String(s).replace(/[&<>"']/g,function(c){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]; }); }
+
+/* ============ loading（带兜底自动关闭） ============ */
+var __loadingTimer=null;
+function showLoading(t,s){
+  var o=$('#loadingOverlay'), tx=$('#loadingText'), sb=$('#loadingSub');
+  if(tx) tx.textContent=t||'正在处理…';
+  if(sb) sb.textContent=s||'请稍候';
+  if(o) o.classList.remove('hidden');
+  if(__loadingTimer){ clearTimeout(__loadingTimer); __loadingTimer=null; }
+  __loadingTimer=setTimeout(function(){
+    if(!state.connected){
+      hideLoading();
+    }
+  }, 5000);
+}
+function hideLoading(){
+  if(__loadingTimer){ clearTimeout(__loadingTimer); __loadingTimer=null; }
+  var o=$('#loadingOverlay'); if(o) o.classList.add('hidden');
+}
+function makeMsgId(){ return 'm-'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); }
+
+/* ==================== 身份系统 ==================== */
+function genIdentityId(){
+  return 'id-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10)+'-'+Math.random().toString(36).slice(2,6);
+}
+
+/* ==================== 会话保持 ==================== */
+function saveSession(){
+  try{
+    if(!/^\d{6}$/.test(String(state.roomId||''))) return;
+    localStorage.setItem(SESSION_KEY, JSON.stringify({
+      roomId: state.roomId,
+      isHost: !!state.isHost,
+      nick: state.nick || '',
+      url: state.url || '',
+      identityId: state.identityId || '',
+      ts: Date.now()
+    }));
+  }catch(e){}
+}
+function loadSession(){
+  try{
+    var s=JSON.parse(localStorage.getItem(SESSION_KEY)||'null');
+    if(!s||!/^\d{6}$/.test(String(s.roomId||''))) return null;
+    if(Date.now()-(s.ts||0)>SESSION_TTL) return null;
+    return s;
+  }catch(e){ return null; }
+}
+function clearSession(){ try{ localStorage.removeItem(SESSION_KEY); }catch(e){} }
+function renewSession(){
+  try{
+    var raw=localStorage.getItem(SESSION_KEY);
+    if(!raw) return;
+    var s=JSON.parse(raw);
+    if(!s||!/^\d{6}$/.test(String(s.roomId||''))) return;
+    s.ts=Date.now();
+    if(state.identityId) s.identityId=state.identityId;
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+  }catch(e){}
+}
+
+/* ==================== 聊天记录持久化 ==================== */
+function histKey(roomId){ return 'tvparty_log_'+(roomId||state.roomId||'x'); }
+function loadHistory(roomId){
+  try{
+    var arr=JSON.parse(localStorage.getItem(histKey(roomId))||'[]');
+    if(Object.prototype.toString.call(arr)!=='[object Array]') return [];
+    return arr.filter(function(m){ return m&&m.id&&m.text; }).slice(-HISTORY_MAX);
+  }catch(e){ return []; }
+}
+function persistChatLog(msg){
+  if(!/^\d{6}$/.test(String(state.roomId||''))) return;
+  if(!msg||!msg.id||msg.kind!=='chat'||!msg.text) return;
+  try{
+    var key=histKey(state.roomId);
+    var arr=JSON.parse(localStorage.getItem(key)||'[]');
+    if(Object.prototype.toString.call(arr)!=='[object Array]') arr=[];
+    for(var i=arr.length-1;i>=0&&i>arr.length-60;i--){ if(arr[i]&&arr[i].id===msg.id) return; }
+    arr.push({
+      id:msg.id, nick:msg.nick||'', text:msg.text, ts:msg.ts||Date.now(),
+      term: msg.term ? {query:msg.term.query, keyword:msg.term.keyword||null} : null
+    });
+    if(arr.length>HISTORY_MAX) arr=arr.slice(-HISTORY_MAX);
+    localStorage.setItem(key, JSON.stringify(arr));
+  }catch(e){}
+}
+function bulkPersistHistory(list){
+  if(!list||!list.length) return;
+  if(!/^\d{6}$/.test(String(state.roomId||''))) return;
+  try{
+    var key=histKey(state.roomId);
+    var arr=JSON.parse(localStorage.getItem(key)||'[]');
+    if(Object.prototype.toString.call(arr)!=='[object Array]') arr=[];
+    var seen={};
+    for(var k=0;k<arr.length;k++){ if(arr[k]&&arr[k].id) seen[arr[k].id]=1; }
+    for(var i=0;i<list.length;i++){
+      var m=list[i];
+      if(!m||!m.id||seen[m.id]) continue;
+      seen[m.id]=1;
+      arr.push(m);
+    }
+    if(arr.length>HISTORY_MAX) arr=arr.slice(-HISTORY_MAX);
+    localStorage.setItem(key, JSON.stringify(arr));
+  }catch(e){}
+}
+
+/* ==================== URL 净化 / 广告拦截 ==================== */
+var AD_HOSTS=['doubleclick.net','googlesyndication.com','googleadservices.com','adservice.google.com','adnxs.com','criteo.com','criteo.net','taboola.com','outbrain.com','mgid.com','revcontent.com','popads.net','propellerads.com','onclickads.net','popcash.net','adcash.com','clickadu.com','exoclick.com','juicyads.com','zedo.com','adform.net','pubmatic.com','rubiconproject.com','openx.net','smartadserver.com','yieldmo.com','sharethrough.com','teads.tv','adroll.com','bidswitch.net','casalemedia.com','gumgum.com','inmobi.com','mopub.com','smaato.net','sonobi.com','spotxchange.com','tremorhub.com','triplelift.com','yieldlab.net','admaster.com.cn','miaozhen.com','chanjet.com','tanx.com','alimama.com','mediav.com','ipinyou.com','adchina.com','union.360.cn','cpro.baidu.com','pos.baidu.com'];
+var TRACK_PARAMS=['utm_source','utm_medium','utm_campaign','utm_term','utm_content','utm_id','gclid','fbclid','spm_id_from','vd_source','from_source','from_spmid','share_source','share_medium','share_plat','share_session_id','share_tag','unique_k','bbid','navhide','msource','refer_from','refer_medium','_from'];
+function isAdHost(host){
+  host=String(host||'').toLowerCase();
+  if(!host) return false;
+  for(var i=0;i<AD_HOSTS.length;i++){
+    var d=AD_HOSTS[i];
+    if(host===d||host.slice(-(d.length+1))==='.'+d) return true;
+  }
+  return false;
+}
+function sanitizeUrl(u){
+  var s=String(u==null?'':u).trim();
+  if(!s) return s;
+  try{
+    var a=document.createElement('a'); a.href=s;
+    if(!/^https?:$/i.test(a.protocol)) return s;
+    var qs=a.search.replace(/^\?/,'');
+    if(!qs) return s;
+    var kept=qs.split('&').filter(function(kv){
+      if(!kv) return false;
+      var k=kv.split('=')[0].toLowerCase();
+      return TRACK_PARAMS.indexOf(k)===-1;
+    });
+    a.search=kept.length?('?'+kept.join('&')):'';
+    return a.href;
+  }catch(e){ return s; }
+}
+function guardUrl(u){
+  var s=sanitizeUrl(u);
+  try{
+    var a=document.createElement('a'); a.href=s;
+    if(isAdHost(a.hostname)) return {blocked:true, url:s};
+  }catch(e){}
+  return {blocked:false, url:s};
+}
+function injectIframeHygiene(){
+  try{
+    var ifr=document.getElementById('player');
+    if(!ifr) return;
+    var doc=null;
+    try{ doc=ifr.contentDocument; }catch(e){ doc=null; }
+    if(!doc) return;
+    if(!doc.getElementById('__tv_hide_ads')){
+      var st=doc.createElement('style');
+      st.id='__tv_hide_ads';
+      st.textContent='ins.adsbygoogle,[class*="advert"],[id*="advert"],[class^="ad-"],[class*=" ad-"],[id^="ad-"],[id^="ads"],[class^="ads"],[class*="popup"],[class*="float-ad"],[class*="ad-wrap"],[class*="adsbygoogle"],iframe[src*="doubleclick"],iframe[src*="googlesyndication"]{display:none!important;visibility:hidden!important;height:0!important;width:0!important;pointer-events:none!important;}';
+      (doc.head||doc.documentElement).appendChild(st);
+    }
+    if(!doc.__tvAdObserver){
+      try{
+        var mo=new MutationObserver(function(muts){
+          for(var i=0;i<muts.length;i++){
+            var nodes=muts[i].addedNodes||[];
+            for(var j=0;j<nodes.length;j++){
+              var n=nodes[j];
+              if(!n||n.nodeType!==1) continue;
+              var src=(n.getAttribute&&n.getAttribute('src'))||'';
+              if(/doubleclick|googlesyndication|adservice/i.test(src)){ try{ n.remove(); }catch(e){} }
+            }
+          }
+        });
+        mo.observe(doc.documentElement,{childList:true,subtree:true});
+        doc.__tvAdObserver=mo;
+      }catch(e){}
+    }
+  }catch(e){}
+}
+
+/* ==================== PeerJS 多源加载（精简版：4 源 × 3.5s） ==================== */
+var PEER_SRC_LIST=[
+  'https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js',
+  'https://fastly.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js',
+  'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js',
+  'https://lib.baomitu.com/peerjs/1.5.4/peerjs.min.js'
+];
+var peerLibState='idle', peerLibWaiters=[], peerLibTryCount=0;
+function peerLibLoaded(){ return typeof window.Peer!=='undefined'; }
+function loadScriptOnce(src, timeout, done){
+  var s=document.createElement('script');
+  var fin=false;
+  var t=setTimeout(function(){
+    if(fin) return; fin=true;
+    try{ s.onload=null; s.onerror=null; if(s.parentNode) s.parentNode.removeChild(s); }catch(e){}
+    done(false);
+  }, timeout);
+  s.src=src; s.async=true;
+  s.onload=function(){ if(fin) return; fin=true; clearTimeout(t); done(peerLibLoaded()); };
+  s.onerror=function(){ if(fin) return; fin=true; clearTimeout(t); try{ if(s.parentNode) s.parentNode.removeChild(s); }catch(e){} done(false); };
+  try{ (document.head||document.documentElement).appendChild(s); }catch(e){ if(!fin){ fin=true; clearTimeout(t); done(false); } }
+}
+function flushPeerWaiters(){
+  var w=peerLibWaiters; peerLibWaiters=[];
+  for(var i=0;i<w.length;i++){ try{ w[i](peerLibLoaded()); }catch(e){} }
+}
+function ensurePeerLib(cb){
+  if(peerLibLoaded()){ peerLibState='ready'; if(cb) cb(true); return; }
+  if(cb) peerLibWaiters.push(cb);
+  if(peerLibState==='loading') return;
+  peerLibState='loading';
+  var i=0;
+  function next(){
+    if(peerLibLoaded()){ peerLibState='ready'; flushPeerWaiters(); return; }
+    if(i>=PEER_SRC_LIST.length){ peerLibState='failed'; flushPeerWaiters(); return; }
+    peerLibTryCount=i+1;
+    showMsg('正在加载通信组件… ('+peerLibTryCount+'/'+PEER_SRC_LIST.length+')');
+    loadScriptOnce(PEER_SRC_LIST[i++], 3500, function(ok){
+      if(ok){ peerLibState='ready'; flushPeerWaiters(); }
+      else next();
+    });
+  }
+  next();
+}
+function withPeerLib(fn){
+  if(peerLibLoaded()){ fn(); return; }
+  showMsg('正在加载通信组件…');
+  /* 不再禁用按钮，用户连点只是排队，不会"按不动" */
+  ensurePeerLib(function(ok){
+    if(!ok){
+      showMsg('通信组件加载失败：所在网络可能拦截了 CDN。再次点击「创建房间」会重试，或换网络/换浏览器。', true);
+      return;
+    }
+    showMsg('');
+    fn();
+  });
+}
+
+/* ==================== 跨浏览器媒体能力 ==================== */
+function getUserMediaCompat(constraints, cb){
+  var md=navigator.mediaDevices;
+  if(md&&md.getUserMedia){
+    var pr;
+    try{ pr=md.getUserMedia(constraints); }catch(e){ cb(e||{name:'Error'}); return; }
+    if(pr&&pr.then) pr.then(function(s){ cb(null,s); }, function(e){ cb(e||{name:'Error'}); });
+    else cb({name:'Error'});
+    return;
+  }
+  var legacy=navigator.webkitGetUserMedia||navigator.mozGetUserMedia||navigator.msGetUserMedia;
+  if(legacy){
+    var handled=false;
+    try{
+      legacy.call(navigator, constraints, function(s){ if(handled) return; handled=true; cb(null,s); },
+        function(e){ if(handled) return; handled=true; cb(e||{name:'Error'}); });
+      return;
+    }catch(e){ cb(e); return; }
+  }
+  cb({name:'Unsupported'});
+}
+function getDisplayMediaCompat(cb){
+  var md=navigator.mediaDevices;
+  var fn=md?(md.getDisplayMedia||md.webkitGetDisplayMedia):null;
+  if(!fn){ cb({name:'Unsupported'}); return; }
+  var tries=[
+    {video:{width:{ideal:1280,max:1280},height:{ideal:720,max:720},frameRate:{ideal:24,max:24}},audio:true},
+    {video:{width:{ideal:1280,max:1280},height:{ideal:720,max:720},frameRate:{ideal:24,max:24}},audio:false},
+    {video:true,audio:false},
+    {video:true}
+  ];
+  var i=0;
+  function next(){
+    if(i>=tries.length){ cb({name:'Unsupported'}); return; }
+    var cons=tries[i++];
+    var pr;
+    try{ pr=fn.call(md, cons); }catch(e){
+      if(e&&(e.name==='NotAllowedError'||e.name==='PermissionDeniedError')){ cb(e); return; }
+      next(); return;
+    }
+    if(!pr||typeof pr.then!=='function'){ next(); return; }
+    pr.then(function(s){ cb(null,s); }, function(err){
+      var n=err&&err.name;
+      if(n==='NotAllowedError'||n==='PermissionDeniedError'){ cb(err); return; }
+      next();
+    });
+  }
+  next();
+}
+function stopStream(s){
+  if(!s) return;
+  try{ var tr=s.getTracks?s.getTracks():[]; for(var i=0;i<tr.length;i++){ try{ tr[i].stop(); }catch(e){} } }catch(e){}
+}
+function streamHasVideo(s){ try{ return !!(s&&s.getVideoTracks&&s.getVideoTracks().length); }catch(e){ return false; } }
+function mediaErrText(err){
+  if(!err) return '未知错误';
+  var n=err.name||'';
+  if(n==='NotAllowedError'||n==='PermissionDeniedError') return '权限被拒绝或已取消';
+  if(n==='NotFoundError') return '没有找到可用设备';
+  if(n==='NotReadableError') return '设备被其它程序占用';
+  if(n==='NotSupportedError'||n==='Unsupported') return '当前浏览器不支持';
+  if(n==='Timeout') return '网络超时';
+  return err.message||n||'未知错误';
+}
+
+/* ==================== 状态 ==================== */
+var state={
+  peer:null, isHost:false, connected:false,
+  roomId:'', nick:'', url:'',
+  identityId:'',
+  identityToPeer:new Map(),
+  replacedPeers:new Set(),
+  clientHistorySent:false,
+  hostConn:null, conns:new Map(), members:new Map(),
+  shareStream:null, mediaCalls:new Map(),
+  remoteStream:null, shareActive:false, viewMode:'local',
+  shareKind:'screen', shareFacing:'user',
+  rejoined:false, reconnecting:false,
+  pendingUrlBeforeShare:null
+};
+var hostRetries=0, unreadCount=0, chatPanelEl=null, unreadBadgeEl=null;
+var pendingMedia=new Map(), sendQueue=[], sendProcessing=false, heartbeatTimer=null;
+var allMessages=[], displayedCount=CHAT_INITIAL, chatAutoStick=true;
+var pendingChoice=null;
+var pendingInitialUrl='', lastAutoUrl='', iframePollTimer=null;
+var playerOuterEl=null, mainWrapEl=null, viewLayer=null, viewportLayer=null, zoomLabel=null;
+var view={scale:1,tx:0,ty:0}, handMode=false, handHintEl=null;
+var MIN_SCALE=0.5, MAX_SCALE=4;
+var iframeReady=false;
+var reconnectAttempts=0, reconnectTimer=null;
+var __lastMediaSend=0;
+
+/* 悬浮窗状态 */
+var floatState={ active:false, idx:1, x:0, y:0, dragged:false, bound:false };
+
+/* ==================== 地址栏/分享链接同步（安全版：不重载） ==================== */
+function hashParams(){
+  var o={}, h=String(location.hash||'').replace(/^#/,'');
+  if(!h) return o;
+  var parts=h.split('&');
+  for(var i=0;i<parts.length;i++){
+    var kv=parts[i].split('=');
+    if(kv.length<2) continue;
+    var k='', v='';
+    try{ k=decodeURIComponent(kv[0]); v=decodeURIComponent(kv.slice(1).join('=')); }catch(e){ k=kv[0]; v=kv.slice(1).join('='); }
+    if(k) o[k]=v;
+  }
+  if(!o.room){ var m=h.match(/room=(\d{6})/); if(m) o.room=m[1]; }
+  return o;
+}
+function buildHash(){
+  var parts=[];
+  if(state.roomId) parts.push('room='+state.roomId);
+  if(state.url) parts.push('v='+encodeURIComponent(state.url));
+  return parts.length?('#'+parts.join('&')):'';
+}
+function syncUrlHash(){
+  try{
+    if(!window.history || typeof history.replaceState !== 'function') return;
+    var target = buildHash();
+    if(location.hash === target) return;
+    var base = location.href.split('#')[0];
+    try{ history.replaceState(null, '', base + target); }catch(e){}
+  }catch(e){}
+}
+function clearUrlHash(){
+  try{
+    if(!window.history || typeof history.replaceState !== 'function') return;
+    if(!location.hash) return;
+    var base = location.href.split('#')[0];
+    try{ history.replaceState(null, '', base); }catch(e){}
+  }catch(e){}
+}
+function buildInviteLink(){ try{ return location.href.split('#')[0]+buildHash(); }catch(e){ return location.href; } }
+function urlVideoKey(u){
+  var s=String(u||'');
+  var bv=(s.match(/BV[0-9A-Za-z]{10}/)||[])[0];
+  if(bv) return bv.toUpperCase();
+  var av=(s.match(/(?:[?&]aid=|[^0-9A-Za-z]av)(\d{1,15})/i)||[])[1];
+  if(av) return 'av'+av;
+  var yt=(s.match(/[?&]v=([\w-]{6,})/)||[])[1]||(s.match(/\/embed\/([\w-]{6,})/)||[])[1];
+  if(yt) return 'yt'+yt;
+  return null;
+}
+function urlHostPath(u){ try{ var a=document.createElement('a'); a.href=u; return String(a.hostname||'')+String(a.pathname||''); }catch(e){ return String(u||''); } }
+function isMeaningfulUrlChange(oldU,newU){
+  if(!oldU||!newU) return false;
+  if(oldU===newU) return false;
+  var ka=urlVideoKey(oldU), kb=urlVideoKey(newU);
+  if(ka&&kb) return ka!==kb;
+  if(!ka&&!kb) return false;
+  return urlHostPath(oldU)!==urlHostPath(newU);
+}
+function shortUrlLabel(url){
+  try{
+    var a=document.createElement('a'); a.href=url;
+    var host=String(a.hostname||''), path=String(a.pathname||''), q=String(a.search||'');
+    if(/bilibili\.com$/i.test(host)){
+      var bv=urlVideoKey(url);
+      var isPlayer=/^player\./i.test(host)||/\/player\.html$/i.test(path);
+      return 'B站'+(bv?(' · '+bv):'')+((!isPlayer&&path&&path!=='/')?path:'');
+    }
+    if(/youtube(-nocookie)?\.com$/i.test(host)){
+      var yt=urlVideoKey(url);
+      return 'YouTube'+(yt?(' · '+yt.replace(/^yt/,'')):'');
+    }
+    var full=host+(path==='/'?'':path)+(q.length>2?q:'');
+    return full||url;
+  }catch(e){ return String(url||''); }
+}
+
+/* ==================== 视口预设 ==================== */
+var VIEWPORT_PRESETS=[
+  {match:/player\.bilibili\.com/i, name:'B站播放器', vp:{x:0,y:0,w:1,h:1}},
+  {match:/youtube\.com\/embed|youtube-nocookie\.com\/embed/i, name:'YouTube', vp:{x:0,y:0,w:1,h:1}},
+  {match:/bilibili\.com\/video\//i, name:'B站视频页', vp:{x:0,y:0.035,w:1,h:0.56}},
+  {match:/youtube\.com\/watch/i, name:'YouTube页面', vp:{x:0.01,y:0.09,w:0.72,h:0.72}},
+  {match:/.*/, name:'默认', vp:{x:0,y:0,w:1,h:1}}
+];
+var currentPreset={name:'默认',vp:{x:0,y:0,w:1,h:1}};
+function getHostOfUrl(url){ try{ var a=document.createElement('a'); a.href=url; return a.hostname||''; }catch(e){ return ''; } }
+function loadCustomPreset(h){ try{ var d=localStorage.getItem('tvparty_vp_'+h); if(d){ var vp=JSON.parse(d); if(vp&&typeof vp.x==='number'&&vp.w>0.05&&vp.h>0.05) return vp; } }catch(e){} return null; }
+function updatePresetForUrl(url){
+  if(!url){ currentPreset={name:'默认',vp:{x:0,y:0,w:1,h:1}}; return; }
+  var h=getHostOfUrl(url), c=h?loadCustomPreset(h):null;
+  if(c){ currentPreset={name:'自定义',vp:c}; return; }
+  for(var i=0;i<VIEWPORT_PRESETS.length;i++){
+    if(VIEWPORT_PRESETS[i].match.test(url)){ currentPreset=VIEWPORT_PRESETS[i]; return; }
+  }
+  currentPreset=VIEWPORT_PRESETS[VIEWPORT_PRESETS.length-1];
+}
+function applyPresetTransform(){
+  if(!viewportLayer||!playerOuterEl) return;
+  var cw=playerOuterEl.clientWidth, ch=playerOuterEl.clientHeight;
+  if(cw<=0||ch<=0) return;
+  var vp=currentPreset.vp, k=Math.max(1/vp.w, 1/vp.h);
+  var tx=cw*(0.5-k*(vp.x+vp.w/2)), ty=ch*(0.5-k*(vp.y+vp.h/2));
+  viewportLayer.style.width=cw+'px';
+  viewportLayer.style.height=ch+'px';
+  var tf='translate('+tx+'px, '+ty+'px) scale('+k+')';
+  viewportLayer.style.webkitTransform=tf;
+  viewportLayer.style.transform=tf;
+}
+
+/* ==================== 视图工具 ==================== */
+function clampScale(s){ return Math.min(MAX_SCALE, Math.max(MIN_SCALE, s)); }
+function applyManualTransform(){
+  if(!viewLayer) return;
+  var tf='translate('+view.tx+'px, '+view.ty+'px) scale('+view.scale+')';
+  viewLayer.style.webkitTransform=tf;
+  viewLayer.style.transform=tf;
+  if(zoomLabel) zoomLabel.textContent=Math.round(view.scale*100)+'%';
+}
+function resetView(){ view.scale=1; view.tx=0; view.ty=0; applyManualTransform(); }
+function zoomBy(d){ view.scale=clampScale(view.scale*d); applyManualTransform(); }
+function exitHandMode(){
+  if(!handMode) return;
+  handMode=false;
+  var pw=$('#playerWrap'); if(pw) pw.classList.remove('hand-mode');
+  var b=$('#handModeBtn'); if(b) b.classList.remove('active');
+  if(handHintEl) handHintEl.classList.add('hidden');
+}
+function enterHandMode(){
+  if(handMode) return;
+  handMode=true;
+  var pw=$('#playerWrap'); if(pw) pw.classList.add('hand-mode');
+  var b=$('#handModeBtn'); if(b) b.classList.add('active');
+  if(!handHintEl && pw){
+    handHintEl=document.createElement('div');
+    handHintEl.className='hand-hint';
+    handHintEl.textContent='单指拖动 · 双指缩放 · 点手形按钮退出';
+    pw.appendChild(handHintEl);
+  }
+  if(handHintEl) handHintEl.classList.remove('hidden');
+}
+function toggleHandMode(){ if(handMode) exitHandMode(); else enterHandMode(); }
+
+/* ==================== 触摸手势 ==================== */
+var touchState={active:false,mode:null,startDist:0,startScale:1,startX:0,startY:0,startTx:0,startTy:0};
+function getDist(t1,t2){ var dx=t1.clientX-t2.clientX, dy=t1.clientY-t2.clientY; return Math.sqrt(dx*dx+dy*dy); }
+function onTouchStart(e){
+  if(!handMode) return;
+  if(e.touches.length===2){
+    touchState.active=true; touchState.mode='pinch';
+    touchState.startDist=getDist(e.touches[0],e.touches[1]);
+    touchState.startScale=view.scale;
+    if(e.preventDefault) e.preventDefault();
+  } else if(e.touches.length===1){
+    touchState.active=true; touchState.mode='pan';
+    touchState.startX=e.touches[0].clientX; touchState.startY=e.touches[0].clientY;
+    touchState.startTx=view.tx; touchState.startTy=view.ty;
+    if(e.preventDefault) e.preventDefault();
+  }
+}
+function onTouchMove(e){
+  if(!handMode||!touchState.active) return;
+  if(touchState.mode==='pinch'&&e.touches.length===2){
+    var d=getDist(e.touches[0],e.touches[1]);
+    if(touchState.startDist>0){ view.scale=clampScale(touchState.startScale*(d/touchState.startDist)); applyManualTransform(); }
+    if(e.preventDefault) e.preventDefault();
+  } else if(touchState.mode==='pan'&&e.touches.length===1){
+    view.tx=touchState.startTx+(e.touches[0].clientX-touchState.startX);
+    view.ty=touchState.startTy+(e.touches[0].clientY-touchState.startY);
+    applyManualTransform();
+    if(e.preventDefault) e.preventDefault();
+  }
+}
+function onTouchEnd(e){
+  if(e.touches.length===0){ touchState.active=false; touchState.mode=null; }
+  else if(e.touches.length===1&&touchState.mode==='pinch'){
+    touchState.mode='pan';
+    touchState.startX=e.touches[0].clientX; touchState.startY=e.touches[0].clientY;
+    touchState.startTx=view.tx; touchState.startTy=view.ty;
+  }
+}
+
+/* ==================== 动态视口 ==================== */
+function updateSafeBottom(){
+  try{
+    var p=document.createElement('div');
+    p.style.cssText='position:fixed;left:0;bottom:0;width:0;height:env(safe-area-inset-bottom,0px);height:constant(safe-area-inset-bottom,0px);pointer-events:none;visibility:hidden';
+    document.body.appendChild(p);
+    var h=p.getBoundingClientRect().height||0;
+    document.body.removeChild(p);
+    document.documentElement.style.setProperty('--safe-b', h+'px');
+  }catch(e){}
+}
+function updateAppHeight(){
+  try{
+    var h=(window.visualViewport&&window.visualViewport.height)||window.innerHeight||document.documentElement.clientHeight||0;
+    if(h>0) document.documentElement.style.setProperty('--app-h', h+'px');
+  }catch(e){}
+}
+function updatePlayerHeight(){
+  if(!playerOuterEl) return;
+  if(floatState.active) return;
+  var col=playerOuterEl.parentNode; if(!col) return;
+  var cw=col.clientWidth||window.innerWidth; if(cw<=0) return;
+  var byW=cw*9/16;
+  var isL=window.innerWidth>window.innerHeight;
+  var vh=window.innerHeight||0;
+  var byVh=vh*(isL?0.55:0.45);
+  var h=Math.min(byW,byVh); if(h<160) h=160;
+  playerOuterEl.style.height=Math.round(h)+'px';
+}
+function refreshLayout(){ updateSafeBottom(); updateAppHeight(); updatePlayerHeight(); applyPresetTransform(); }
+function bindViewportEvents(){
+  window.addEventListener('resize', function(){
+    refreshLayout();
+    if(floatState.active){ clampFloatPosition(); applyFloatPosition(); updateFloatHandle(); setTimeout(refreshLayout, 50); }
+  }, false);
+  window.addEventListener('orientationchange', function(){
+    setTimeout(refreshLayout, 60);
+    setTimeout(refreshLayout, 300);
+    if(floatState.active){ setTimeout(function(){ clampFloatPosition(); applyFloatPosition(); updateFloatHandle(); refreshLayout(); }, 100); }
+  }, false);
+  if(window.visualViewport){
+    window.visualViewport.addEventListener('resize', function(){
+      refreshLayout();
+      if(floatState.active){ clampFloatPosition(); applyFloatPosition(); updateFloatHandle(); }
+    }, false);
+    window.visualViewport.addEventListener('scroll', refreshLayout, false);
+  }
+}
+
+/* ==================== 悬浮窗 ==================== */
+function getFloatSizes(){
+  var vw=window.innerWidth, vh=window.innerHeight;
+  var ratios=[0.42,0.58,0.74,0.9];
+  var labels=['小','中','大','超大'];
+  var out=[];
+  for(var i=0;i<ratios.length;i++){
+    var w=Math.round(vw*ratios[i]);
+    var h=Math.round(w*9/16);
+    var maxH=vh-120;
+    if(h>maxH){ h=maxH; w=Math.round(h*16/9); }
+    if(w<200){ w=200; h=Math.round(w*9/16); }
+    if(h<120){ h=120; w=Math.round(h*16/9); }
+    out.push({w:w, h:h, label:labels[i]});
+  }
+  return out;
+}
+function clampFloatPosition(sizesArg){
+  var sizes=sizesArg||getFloatSizes();
+  var s=sizes[floatState.idx]||sizes[0];
+  var vw=window.innerWidth, vh=window.innerHeight;
+  var minX=6, minY=6;
+  var maxX=vw-s.w-6;
+  var maxY=vh-s.h-6;
+  if(floatState.x<minX) floatState.x=minX;
+  if(floatState.y<minY) floatState.y=minY;
+  if(floatState.x>maxX) floatState.x=maxX;
+  if(floatState.y>maxY) floatState.y=maxY;
+}
+function applyFloatPosition(){
+  var po=playerOuterEl;
+  if(!po) return;
+  var sizes=getFloatSizes();
+  var s=sizes[floatState.idx]||sizes[0];
+  po.style.width=s.w+'px';
+  po.style.height=s.h+'px';
+  po.style.left=Math.round(floatState.x)+'px';
+  po.style.top=Math.round(floatState.y)+'px';
+}
+function updateFloatHandle(){
+  var el=document.getElementById('floatSizeLabel');
+  if(!el) return;
+  var sizes=getFloatSizes();
+  var s=sizes[floatState.idx]||sizes[0];
+  el.textContent=s.label+' · '+s.w+'×'+s.h;
+}
+function cycleFloatSize(){
+  var sizes=getFloatSizes();
+  floatState.idx=(floatState.idx+1)%sizes.length;
+  clampFloatPosition(sizes);
+  applyFloatPosition();
+  updateFloatHandle();
+  refreshLayout();
+  toast('悬浮窗：'+sizes[floatState.idx].label+'（'+sizes[floatState.idx].w+'×'+sizes[floatState.idx].h+'）');
+}
+function initFloatMode(){
+  if(floatState.bound) return;
+  var po=playerOuterEl;
+  if(!po) return;
+
+  var handle=document.createElement('div');
+  handle.className='float-handle';
+  handle.innerHTML='<span class="hint">拖动移动 · 双击缩放</span><span class="size-label" id="floatSizeLabel">中</span>';
+  po.appendChild(handle);
+
+  var exitBtn=document.createElement('button');
+  exitBtn.className='float-exit';
+  exitBtn.type='button';
+  exitBtn.textContent='✕ 退出悬浮';
+  po.appendChild(exitBtn);
+
+  var overlay=document.createElement('div');
+  overlay.className='float-overlay';
+  po.appendChild(overlay);
+
+  exitBtn.addEventListener('click', function(e){ e.stopPropagation(); exitFloatMode(); });
+
+  var startX=0, startY=0, origX=0, origY=0, dragging=false;
+  var lastTapTime=0;
+  var draggedRecently=false;
+
+  function onStart(cx, cy){
+    startX=cx; startY=cy;
+    origX=floatState.x; origY=floatState.y;
+    dragging=true;
+    floatState.dragged=false;
+  }
+  function onMove(cx, cy){
+    if(!dragging) return;
+    var dx=cx-startX, dy=cy-startY;
+    if(!floatState.dragged && (Math.abs(dx)>4||Math.abs(dy)>4)) floatState.dragged=true;
+    if(!floatState.dragged) return;
+    floatState.x=origX+dx;
+    floatState.y=origY+dy;
+    clampFloatPosition();
+    applyFloatPosition();
+  }
+  function onEnd(){
+    dragging=false;
+    if(floatState.dragged){
+      draggedRecently=true;
+      setTimeout(function(){ draggedRecently=false; }, 320);
+    }
+    floatState.dragged=false;
+  }
+
+  overlay.addEventListener('touchstart', function(e){
+    if(e.touches.length!==1){ dragging=false; return; }
+    onStart(e.touches[0].clientX, e.touches[0].clientY);
+  }, {passive:true});
+  overlay.addEventListener('touchmove', function(e){
+    if(!dragging||e.touches.length!==1) return;
+    onMove(e.touches[0].clientX, e.touches[0].clientY);
+    if(floatState.dragged && e.cancelable) e.preventDefault();
+  }, {passive:false});
+  overlay.addEventListener('touchend', function(e){
+    if(!floatState.dragged && !draggedRecently){
+      var now=Date.now();
+      if(now-lastTapTime<320){ cycleFloatSize(); lastTapTime=0; }
+      else { lastTapTime=now; }
+    }
+    onEnd();
+  }, {passive:true});
+
+  overlay.addEventListener('mousedown', function(e){
+    if(e.button!==0) return;
+    onStart(e.clientX, e.clientY);
+    e.preventDefault();
+  });
+  overlay.addEventListener('dblclick', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    if(draggedRecently) return;
+    cycleFloatSize();
+  }, false);
+  document.addEventListener('mousemove', function(e){ if(!dragging) return; onMove(e.clientX, e.clientY); }, false);
+  document.addEventListener('mouseup', function(){ if(!dragging) return; onEnd(); }, false);
+
+  floatState.bound=true;
+}
+function enterFloatMode(){
+  var po=playerOuterEl;
+  if(!po||floatState.active) return;
+  initFloatMode();
+  floatState.active=true;
+  floatState.idx=1;
+  var sizes=getFloatSizes();
+  var s=sizes[floatState.idx];
+  var vw=window.innerWidth, vh=window.innerHeight;
+  floatState.x=vw-s.w-12;
+  floatState.y=vh-s.h-90;
+  clampFloatPosition(sizes);
+  po.classList.add('floating');
+  applyFloatPosition();
+  updateFloatHandle();
+  exitHandMode();
+  var fb=document.getElementById('floatModeBtn');
+  if(fb) fb.classList.add('active');
+  toast('已进入悬浮窗 · 拖动移动 · 双击缩放');
+  setTimeout(refreshLayout, 50);
+}
+function exitFloatMode(){
+  var po=playerOuterEl;
+  if(!po||!floatState.active) return;
+  floatState.active=false;
+  po.classList.remove('floating');
+  po.style.width='';
+  po.style.height='';
+  po.style.left='';
+  po.style.top='';
+  var fb=document.getElementById('floatModeBtn');
+  if(fb) fb.classList.remove('active');
+  toast('已退出悬浮窗');
+  setTimeout(refreshLayout, 50);
+  setTimeout(refreshLayout, 300);
+}
+function toggleFloatMode(){ if(floatState.active) exitFloatMode(); else enterFloatMode(); }
+
+/* ==================== 视频解析 ==================== */
+function aid2bvid(aid){
+  if(!env.hasBigInt) return null;
+  try{
+    var XOR=BigInt('23442827791579'), MAX_AID=BigInt(1)<<BigInt(51), BASE=BigInt(58);
+    var DATA='FcwAPNKTMug3GV5Lj7EJnHpWsx4tb8haYeviqBz6rkCy12mUSDQX9RdoZf';
+    var bytes=['B','V','1','0','0','0','0','0','0','0','0','0'];
+    var idx=bytes.length-1, tmp=(MAX_AID|BigInt(aid))^XOR, zero=BigInt(0);
+    while(tmp>zero){ bytes[idx]=DATA[Number(tmp%BASE)]; tmp=tmp/BASE; idx-=1; }
+    var t=bytes[3]; bytes[3]=bytes[9]; bytes[9]=t;
+    t=bytes[4]; bytes[4]=bytes[7]; bytes[7]=t;
+    return bytes.join('');
+  }catch(e){ return null; }
+}
+function parseVideoInputInner(raw){
+  var t=String(raw==null?'':raw).trim();
+  if(!t) return {error:'请输入或粘贴内容'};
+  var b23Match = t.match(/(?:https?:\/\/)?b23\.tv\/[A-Za-z0-9]+/i);
+  if(b23Match) return {b23Url:'https://'+b23Match[0].replace(/^https?:\/\//i,''),source:'b23-pending',original:b23Match[0]};
+  var im=t.match(/src\s*=\s*["']([^"']+)["']/i);
+  if(im&&/^https?:\/\//i.test(im[1])) return {url:im[1],source:'iframe'};
+  var bvInUrl=t.match(/bilibili\.com\/video\/(BV[0-9A-Za-z]{10})/i);
+  if(bvInUrl){ var bv=bvInUrl[1]; return {url:'https://player.bilibili.com/player.html?bvid='+bv+'&page=1&high_quality=1&danmaku=0&autoplay=0',source:'bilibili',original:bv}; }
+  var bvMatch=t.match(/BV[0-9A-Za-z]{10}/);
+  if(bvMatch){ var bv2=bvMatch[0]; return {url:'https://player.bilibili.com/player.html?bvid='+bv2+'&page=1&high_quality=1&danmaku=0&autoplay=0',source:'bilibili',original:bv2}; }
+  var avMatch=t.match(/(?:^|[^0-9A-Za-z])av(\d{1,15})(?:[^0-9A-Za-z]|$)/i)||t.match(/(?:^|[^0-9A-Za-z])aid=(\d{1,15})/i);
+  if(avMatch){
+    var b=aid2bvid(avMatch[1]);
+    if(b) return {url:'https://player.bilibili.com/player.html?bvid='+b+'&page=1&high_quality=1&danmaku=0&autoplay=0',source:'bilibili-av',original:'av'+avMatch[1]};
+    return {error:'检测到 AV 号但当前浏览器不支持转换'};
+  }
+  var um=t.match(/https?:\/\/[^\s"'<>）)】\]]+/i);
+  var fu=um?um[0]:'';
+  if(fu) return {url:fu,source:'raw'};
+  if(/^[\w.-]+\.[a-z]{2,}(\/|$)/i.test(t)) return {url:'https://'+t,source:'raw'};
+  return {error:'无法识别链接'};
+}
+function parseVideoInput(raw){
+  var r=parseVideoInputInner(raw);
+  if(r&&r.url){
+    var g=guardUrl(r.url);
+    if(g.blocked) return {error:'已拦截广告/追踪链接（'+g.url+'）'};
+    r.url=g.url;
+  }
+  return r;
+}
+function renderParsePreview(el,r){
+  if(!el) return;
+  if(!r){ el.classList.add('hidden'); el.innerHTML=''; return; }
+  el.classList.remove('hidden','ok','error');
+  if(r.error){ el.classList.add('error'); el.innerHTML='<span class="label">⚠️ 无法解析</span>'+escapeHtml(r.error); return; }
+  el.classList.add('ok');
+  if(r.source==='b23-pending'){ el.innerHTML='<span class="label">🔗 B站短链</span>将自动展开 b23.tv 短链获取视频地址'; return; }
+  var l={bilibili:'B站 · '+r.original,'bilibili-av':'B站 · '+r.original,iframe:'从 iframe 代码提取',raw:'普通链接'}[r.source]||'已识别';
+  el.innerHTML='<span class="label">✓ '+escapeHtml(l)+'</span>将使用以下地址嵌入<span class="url">'+escapeHtml(r.url)+'</span>';
+}
+
+/* ==================== b23.tv 展开 ==================== */
+function resolveB23Url(b23Url, cb){
+  var attempts=[
+    'https://api.oioweb.cn/api/bilibili/shorturl?url='+encodeURIComponent(b23Url),
+    'https://corsproxy.io/?'+encodeURIComponent(b23Url),
+    'https://api.allorigins.win/raw?url='+encodeURIComponent(b23Url),
+    'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(b23Url)
+  ];
+  var idx=0;
+  function tryNext(){
+    if(idx>=attempts.length){ cb(null,null); return; }
+    var url=attempts[idx++];
+    var done=false;
+    var timer=setTimeout(function(){ if(!done){ done=true; tryNext(); } },5000);
+    try{
+      fetch(url,{method:'GET',redirect:'follow'}).then(function(r){
+        if(done) return;
+        var finalUrl=r.url||'';
+        return r.text().then(function(txt){
+          if(done) return;
+          var m=finalUrl.match(/bilibili\.com\/video\/(BV[0-9A-Za-z]{10})/i)||finalUrl.match(/bilibili\.com\/video\/av(\d+)/i)||txt.match(/bilibili\.com\/video\/(BV[0-9A-Za-z]{10})/i)||txt.match(/bilibili\.com\/video\/av(\d+)/i)||txt.match(/"(BV[0-9A-Za-z]{10})"/);
+          if(m&&m[0]){
+            done=true; clearTimeout(timer);
+            var bv=m[0];
+            if(bv.indexOf('BV')===-1){ var av=bv.match(/av(\d+)/i); if(av){ var converted=aid2bvid(av[1]); if(converted) bv=converted; } }
+            cb(null,bv);
+          } else { done=true; clearTimeout(timer); tryNext(); }
+        });
+      })['catch'](function(){ if(done) return; done=true; clearTimeout(timer); tryNext(); });
+    }catch(e){ if(done) return; done=true; clearTimeout(timer); tryNext(); }
+  }
+  tryNext();
+}
+
+/* ==================== URL Tag 模式 ==================== */
+function updateUrlTagDisplay(){
+  var tag=document.getElementById('urlTag');
+  var view=document.getElementById('urlView');
+  var hostBarTag=document.getElementById('hostBarTag');
+  if(!tag||!view) return;
+  view.classList.toggle('guest', !state.isHost);
+  if(hostBarTag) hostBarTag.textContent=state.isHost?'房主':'当前链接';
+  var url=state.url||'';
+  if(!url){ tag.textContent='未设置链接'; tag.classList.add('empty'); view.title=''; return; }
+  var display=shortUrlLabel(url);
+  if(display.length>56) display=display.substring(0,56)+'…';
+  tag.textContent=display; tag.classList.remove('empty'); view.title=url;
+}
+function bindUrlViewClick(){
+  var view=document.getElementById('urlView');
+  var input=document.getElementById('urlEdit');
+  if(!view||!input) return;
+  view.addEventListener('click', function(){
+    if(!state.isHost) return;
+    view.classList.add('hidden'); input.classList.remove('hidden');
+    input.value=state.url||'';
+    setTimeout(function(){ try{ input.focus(); input.setSelectionRange(0, input.value.length); }catch(e){} },50);
+  });
+  input.addEventListener('blur', function(){
+    setTimeout(function(){ input.classList.add('hidden'); view.classList.remove('hidden'); updateUrlTagDisplay(); },150);
+  });
+  input.addEventListener('keydown', function(e){
+    if(e.key==='Enter'||e.keyCode===13){ e.preventDefault(); applyUrlChange(); input.blur(); }
+    else if(e.key==='Escape'||e.keyCode===27){ input.blur(); }
+  });
+}
+
+/* ==================== @du 词条 ==================== */
+function parseBotCommand(text){
+  var s=String(text==null?'':text);
+  var atIdx=s.indexOf('@');
+  if(atIdx===-1) return null;
+  var rest=s.substring(atIdx+1);
+  var tagMatch=rest.match(/^([a-zA-Z]+)/);
+  if(!tagMatch) return null;
+  var tag=tagMatch[1].toLowerCase();
+  if(!BOT_TAGS[tag]) return null;
+  var content=rest.substring(tag.length).replace(/^[\s\u3000]+/,'');
+  if(!content) return null;
+  var m=content.match(/^([^\[\]\s@，,。；;：:]+)/);
+  if(!m) return null;
+  var term=m[1].trim();
+  if(!term) return null;
+  var tail=content.substring(m[1].length);
+  var keyword=null;
+  var bm=tail.match(/^\s*\[([^\]]+)\]/);
+  if(bm){ keyword=bm[1].trim(); }
+  else{
+    var rest2=tail.replace(/^[\s，,。；;：:]+/,'').replace(/[\[\]]/g,' ').trim();
+    if(rest2){ keyword=String(rest2.split(/[\s\u3000]+/)[0]||'').trim(); }
+  }
+  if(keyword==='') keyword=null;
+  return {tag:tag, term:term, keyword:keyword};
+}
+function bigrams(s){
+  s=String(s||'').toLowerCase();
+  var g=[];
+  if(s.length<=1){ if(s) g.push(s); return g; }
+  for(var i=0;i<s.length-1;i++) g.push(s.substr(i,2));
+  return g;
+}
+function jaccard(a,b){
+  var sa=new Set(bigrams(a)), sb=new Set(bigrams(b));
+  var inter=0;
+  sa.forEach(function(x){ if(sb.has(x)) inter++; });
+  var union=sa.size+sb.size-inter;
+  return union===0?0:inter/union;
+}
+function cleanTitle(t){ return String(t||'').replace(/[（(].*?[)）]/g,'').replace(/\s+/g,''); }
+function termRelevance(q, title){
+  var t=cleanTitle(title), s=String(q==null?'':q).trim();
+  if(!t||!s) return 0;
+  if(t===cleanTitle(s)) return 1;
+  var score=jaccard(s,t);
+  if(t.indexOf(s)===0) score=Math.max(score,0.55);
+  else if(t.indexOf(s)!==-1) score=Math.max(score,0.32);
+  return score;
+}
+function fetchTextTimeout(url, ms, cb){
+  var done=false, ctrl=null;
+  var timer=setTimeout(function(){
+    if(done) return; done=true;
+    try{ if(ctrl) ctrl.abort(); }catch(e){}
+    cb({name:'Timeout'}, null);
+  }, ms);
+  var opts={method:'GET', mode:'cors', cache:'no-store', credentials:'omit'};
+  if(typeof AbortController!=='undefined'){ try{ ctrl=new AbortController(); opts.signal=ctrl.signal; }catch(e){ ctrl=null; } }
+  try{
+    fetch(url, opts).then(function(r){
+      if(done) return;
+      if(!r||!r.ok){ done=true; clearTimeout(timer); cb({name:'Http', message:'HTTP '+(r?r.status:'0')}, null); return; }
+      return r.text().then(function(t){ if(done) return; done=true; clearTimeout(timer); cb(null, t); });
+    })['catch'](function(e){
+      if(done) return; done=true; clearTimeout(timer);
+      cb((e&&e.name==='AbortError')?{name:'Timeout'}:e, null);
+    });
+  }catch(e){ if(done) return; done=true; clearTimeout(timer); cb(e, null); }
+}
+function parseMediaWiki(txt, base, cb){
+  var d=null;
+  try{ d=JSON.parse(txt); }catch(e){ cb({name:'Parse', message:'返回内容不是合法 JSON'}, null); return; }
+  if(d&&d.error){ cb({name:'Api', message:d.error.info||d.error.code||'接口报错'}, null); return; }
+  var out=[];
+  if(d&&d.query&&d.query.pages){
+    var arr=[];
+    Object.keys(d.query.pages).forEach(function(k){ arr.push(d.query.pages[k]); });
+    arr.sort(function(a,b){ return (a.index||99)-(b.index||99); });
+    arr.forEach(function(p){
+      if(!p||p.missing!==undefined) return;
+      var ab=String(p.extract||'').replace(/\s+/g,' ').trim();
+      var img=p.thumbnail?p.thumbnail.source:null;
+      if(!ab&&!img) return;
+      out.push({title:p.title, abstract:ab, image:img, url:base+'/wiki/'+encodeURIComponent(p.title)});
+    });
+  }
+  cb(null, out);
+}
+function mediaWikiQuery(apiBase, term, limit, withThumbs, cb){
+  var url=apiBase+'/w/api.php?action=query&format=json&origin=*&redirects=1'
+    +'&generator=search&gsrsearch='+encodeURIComponent(term)
+    +'&gsrlimit='+(limit||6)
+    +'&prop=extracts'+(withThumbs?'|pageimages':'')
+    +'&exintro=1&explaintext=1&exlimit=max&exchars=460'
+    +(withThumbs?'&pithumbsize=240&pilimit=max':'');
+  fetchTextTimeout(url, 5000, function(err, txt){
+    if(err||!txt){ cb(err||{name:'Empty'}, null); return; }
+    parseMediaWiki(txt, apiBase, cb);
+  });
+}
+function mediaWikiExact(apiBase, term, cb){
+  var url=apiBase+'/w/api.php?action=query&format=json&origin=*&redirects=1&titles='+encodeURIComponent(term)
+    +'&prop=extracts|pageimages&exintro=1&explaintext=1&exchars=460&pithumbsize=240';
+  fetchTextTimeout(url, 5000, function(err, txt){
+    if(err||!txt){ cb(err||{name:'Empty'}, []); return; }
+    parseMediaWiki(txt, apiBase, cb);
+  });
+}
+function searchMediaWiki(apiBase, term, limit, cb){
+  var finished=false, pending=3, lastErr=null;
+  function done(err, res){
+    if(finished) return;
+    if(res&&res.length){ finished=true; cb(null, res); return; }
+    if(err&&!lastErr) lastErr=err;
+    pending--;
+    if(pending<=0){ finished=true; cb(lastErr||{name:'Empty'}, []); }
+  }
+  mediaWikiQuery(apiBase, term, limit, true, done);
+  mediaWikiQuery(apiBase, term, limit, false, done);
+  mediaWikiExact(apiBase, term, done);
+}
+function wikiApiUrl(term, limit){
+  return 'https://zh.wikipedia.org/w/api.php?action=query&format=json&redirects=1'
+    +'&generator=search&gsrsearch='+encodeURIComponent(term)+'&gsrlimit='+(limit||6)
+    +'&prop=extracts|pageimages&exintro=1&explaintext=1&exlimit=max&exchars=460&pithumbsize=240&pilimit=max';
+}
+var CORS_PROXIES=[
+  function(u){ return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u); },
+  function(u){ return 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u); },
+  function(u){ return 'https://corsproxy.io/?'+encodeURIComponent(u); },
+  function(u){ return 'https://api.allorigins.win/get?url='+encodeURIComponent(u); }
+];
+function proxyWikipedia(term, limit, cb){
+  var api=wikiApiUrl(term, limit);
+  var finished=false, pending=CORS_PROXIES.length, lastErr=null;
+  function done(err, out){
+    if(finished) return;
+    if(out&&out.length){ finished=true; cb(null, out); return; }
+    if(err&&!lastErr) lastErr=err;
+    pending--;
+    if(pending<=0){ finished=true; cb(lastErr||{name:'ProxyFail'}, []); }
+  }
+  for(var i=0;i<CORS_PROXIES.length;i++){
+    (function(fn){
+      var u=fn(api);
+      fetchTextTimeout(u, 6000, function(err, txt){
+        if(finished) return;
+        if(err||!txt){ done(err); return; }
+        var t=String(txt).trim();
+        if(t.charAt(0)==='{'){ try{ var w=JSON.parse(t); if(w&&typeof w.contents==='string') t=w.contents; }catch(e){} }
+        parseMediaWiki(t, 'https://zh.wikipedia.org', function(e2, out){ done(e2, out); });
+      });
+    })(CORS_PROXIES[i]);
+  }
+}
+function baiduToResults(d, term){
+  var out=[];
+  if(!d) return out;
+  if(d.abstract||d.lemmaTitle||d.title||d.desc){
+    var title=String(d.lemmaTitle||d.title||d.key||term);
+    out.push({
+      title:title,
+      abstract:String(d.abstract||d.desc||'').replace(/\s+/g,' ').trim(),
+      image:d.image||d.imgUrl||null,
+      url:d.url||('https://baike.baidu.com/item/'+encodeURIComponent(title)),
+      source:'百度百科'
+    });
+  }
+  return out;
+}
+function baiduBaikeJsonp(term, cb){
+  var name='__bkcb'+(Date.now().toString(36)+Math.random().toString(36).slice(2,6));
+  var script=document.createElement('script');
+  var done=false;
+  function fin(arr){
+    if(done) return; done=true;
+    try{ if(script.parentNode) script.parentNode.removeChild(script); }catch(e){}
+    try{ delete window[name]; }catch(e){ try{ window[name]=undefined; }catch(e2){} }
+    if(arr&&arr.length) cb(null, arr); else cb({name:'ProxyFail'}, []);
+  }
+  window[name]=function(d){ fin(baiduToResults(d, term)); };
+  script.onerror=function(){ fin(null); };
+  script.src='https://baike.baidu.com/api/openapi/BaikeLemmaCardApi?scope=103&format=jsonp&appid=379020'
+    +'&bk_key='+encodeURIComponent(term)+'&bk_length=600&callback='+name;
+  try{ (document.head||document.documentElement).appendChild(script); }catch(e){ fin(null); return; }
+  setTimeout(function(){ fin(null); }, 6000);
+}
+function baiduBaike(term, cb){
+  var finished=false, pending=2, lastErr=null;
+  function done(err, res){
+    if(finished) return;
+    if(res&&res.length){ finished=true; cb(null, res); return; }
+    if(err&&!lastErr) lastErr=err;
+    pending--;
+    if(pending<=0){ finished=true; cb(lastErr||{name:'ProxyFail'}, []); }
+  }
+  var url='https://baike.baidu.com/api/openapi/BaikeLemmaCardApi?scope=103&format=json&appid=379020'
+    +'&bk_key='+encodeURIComponent(term)+'&bk_length=600';
+  fetchTextTimeout(url, 5000, function(err, txt){
+    if(finished) return;
+    if(!err&&txt){
+      var d=null;
+      try{ d=JSON.parse(txt); }catch(e){}
+      var out=baiduToResults(d, term);
+      done(null, out);
+      return;
+    }
+    done(err);
+  });
+  baiduBaikeJsonp(term, function(err, res){ if(finished) return; done(err, res); });
+}
+
+var TERM_SOURCES=[
+  {name:'维基百科', run:function(term,limit,cb){ searchMediaWiki('https://zh.wikipedia.org', term, limit, cb); }},
+  {name:'萌娘百科', run:function(term,limit,cb){ searchMediaWiki('https://zh.moegirl.org.cn', term, limit, cb); }},
+  {name:'维基百科', run:function(term,limit,cb){ proxyWikipedia(term, limit, cb); }},
+  {name:'百度百科', run:function(term,limit,cb){ baiduBaike(term, cb); }}
+];
+
+var TERM_CACHE=new Map();
+function termCacheGet(key){
+  var c=TERM_CACHE.get(key);
+  if(!c) return null;
+  if(Date.now()-c.ts>TERM_CACHE_TTL){ TERM_CACHE.delete(key); return null; }
+  return c;
+}
+function termCacheSet(key, results, source){
+  if(!key||!results||!results.length) return;
+  TERM_CACHE.set(key, {ts:Date.now(), results:results.slice(), source:source||null});
+  if(TERM_CACHE.size>TERM_CACHE_MAX){
+    var oldestK=null, oldestT=Infinity;
+    TERM_CACHE.forEach(function(v,k){ if(v.ts<oldestT){ oldestT=v.ts; oldestK=k; } });
+    if(oldestK) TERM_CACHE.delete(oldestK);
+  }
+}
+function searchTerm(term, cb, opts){
+  var t=String(term||'').trim();
+  if(!t){ cb({name:'Empty', message:'没有找到相关词条'}, [], null); return; }
+  var cached=termCacheGet(t);
+  if(cached){ cb(null, cached.results.slice(), cached.source||null); return; }
+  var totalTimeout=(opts&&opts.timeout)||TERM_TOTAL_TIMEOUT;
+  var finished=false, pending=TERM_SOURCES.length, errors=[], timer=null;
+  function finish(err,res,source){
+    if(finished) return;
+    finished=true;
+    if(timer){ clearTimeout(timer); timer=null; }
+    cb(err, res||[], source||null);
+  }
+  timer=setTimeout(function(){
+    if(finished) return;
+    finish({name:'Timeout'}, [], null);
+  }, totalTimeout);
+  for(var i=0;i<TERM_SOURCES.length;i++){
+    (function(src){
+      var once=false;
+      src.run(t, 6, function(err, res){
+        if(once) return; once=true;
+        if(finished) return;
+        res=res||[];
+        for(var j=0;j<res.length;j++){ if(!res[j].source) res[j].source=src.name; }
+        if(res.length){
+          termCacheSet(t, res, src.name);
+          finish(null, res, src.name);
+          return;
+        }
+        if(err) errors.push(err);
+        pending--;
+        if(pending<=0) finish(errors[0]||{name:'Empty', message:'没有找到相关词条'}, [], null);
+      });
+    })(TERM_SOURCES[i]);
+  }
+}
+function queryTermCandidates(term, cb, opts){
+  searchTerm(term, function(err, results, source){ cb(err, results||[], source); }, opts);
+}
+function queryTermWithKeyword(term, keyword, cb, opts){
+  var t=String(term==null?'':term).trim(), k=String(keyword==null?'':keyword).trim();
+  if(!t){ cb({name:'Empty'}, null, null); return; }
+  if(!k){ queryTermCandidates(t, cb, opts); return; }
+  searchTerm(t+' '+k, function(err, results, source){
+    if(!err&&results&&results.length){
+      var scored=results.map(function(r){
+        var s=Math.max(termRelevance(t,r.title), termRelevance(k,r.title));
+        if(k&&cleanTitle(r.title).indexOf(k)!==-1) s=Math.max(s,0.6);
+        if(t&&cleanTitle(r.title).indexOf(t)!==-1) s=Math.max(s,0.45);
+        return {r:r, s:s};
+      });
+      scored.sort(function(a,b){ return b.s-a.s; });
+      if(scored.length&&scored[0].s>=0.34) cb(null,[scored[0].r],source);
+      else cb(null, scored.slice(0,5).map(function(x){ return x.r; }), source);
+      return;
+    }
+    searchTerm(t, function(err2, res2, source2){ cb(err2||err, res2||[], source2||source); }, opts);
+  }, opts);
+}
+
+/* ==================== 词条卡片 UI ==================== */
+function renderTermLoadingUI(el,q,kw,retry){
+  var label=kw?(q+'['+kw+']'):q;
+  var suffix='';
+  if(retry){
+    var r=retry.round||1, max=retry.max||TERM_MAX_RETRY;
+    suffix='<br><span style="font-size:11px;color:#8b93a7">网络抖动，自动重试中… ('+r+'/'+max+')</span>';
+  }
+  el.innerHTML='<div class="term-loading">正在查询「'+escapeHtml(label)+'」…（多数据源检索，请稍候）'+suffix+'</div>';
+}
+function renderWaitingHostUI(el, q, kw){
+  var label = kw ? (q + '[' + kw + ']') : q;
+  el.innerHTML = '<div class="term-loading">正在等待房主查询「'
+    + escapeHtml(label) + '」…<br>'
+    + '<span style="font-size:11px;color:#8b93a7">若房主长时间未响应，会自动本地查询</span></div>';
+}
+function errTextOf(err){
+  var n=(err&&err.name)||'';
+  if(n==='Timeout') return '网络超时';
+  if(n==='Http') return '接口异常（'+(err.message||'')+'）';
+  if(n==='ProxyFail') return '所有数据源都连不上（可能是网络限制）';
+  if(n==='Parse') return '数据源返回格式异常';
+  if(n==='Api') return '数据源报错：'+(err.message||'');
+  if(n==='Unsupported') return '当前浏览器不支持网络请求';
+  if(n==='TypeError'||/failed to fetch|networkerror|load failed|network request failed/i.test(String((err&&err.message)||''))) return '网络请求失败（可能被拦截或断网）';
+  if(err&&err.message) return err.message;
+  return '网络请求失败';
+}
+function termSourceOf(msg){ return (msg.term&&(msg.term.source||(msg.term.data&&msg.term.data.source)))||''; }
+function updateTermHeader(msg, container){
+  try{
+    var card=container?container.parentNode:null;
+    if(!card) return;
+    var tag=card.querySelector('.term-src-tag');
+    if(!tag) return;
+    var s=termSourceOf(msg);
+    if(s){ tag.textContent=s; tag.classList.remove('hidden'); }
+    else tag.classList.add('hidden');
+  }catch(e){}
+}
+function startTermLoad(msg, container){
+  var t=msg.term;
+  t.loading=true; t.loaded=false; t.error=null;
+  t.awaitingHost=false;
+  t._seq=(t._seq||0)+1;
+  var seq=t._seq;
+  if(container) renderTermLoadingUI(container,t.query,t.keyword);
+
+  function runOnce(round){
+    var opts={ timeout: round===0?TERM_TOTAL_TIMEOUT:TERM_ATTEMPT_TIMEOUT };
+    var done=function(err, results, source){
+      if(seq!==t._seq) return;
+      var empty=!results||!results.length;
+      var isTransient = empty && err && err.name!=='Empty';
+      if(empty && round<TERM_MAX_RETRY && (isTransient || !err || err.name==='Empty')){
+        if(container) renderTermLoadingUI(container,t.query,t.keyword,{round:round+1,max:TERM_MAX_RETRY});
+        var delay=300+round*350;
+        setTimeout(function(){ if(seq===t._seq) runOnce(round+1); }, delay);
+        return;
+      }
+      t.loading=false; t.loaded=true;
+      t.candidates=results||[];
+      if(source) t.source=source;
+      t.errKind=err?(err.name||'Error'):null;
+      t.errText=err?errTextOf(err):null;
+      if(results&&results.length===1) t.data=results[0];
+      if(container) renderTermContent(msg, container);
+      if(state.isHost && state.connected && msg.id){
+        broadcast({
+          type:'term-result',
+          msgId:msg.id,
+          candidates:t.candidates,
+          source:t.source||null,
+          errKind:t.errKind||null,
+          errText:t.errText||null
+        });
+      }
+    };
+    if(!env.hasFetch){ done({name:'Unsupported'}, []); return; }
+    if(t.keyword) queryTermWithKeyword(t.query, t.keyword, done, opts);
+    else queryTermCandidates(t.query, done, opts);
+  }
+  runOnce(0);
+}
+function triggerHostTermQuery(msgId){
+  if(!state.isHost || !state.connected) return;
+  var m=null;
+  for(var i=0;i<allMessages.length;i++){
+    if(allMessages[i].id===msgId){ m=allMessages[i]; break; }
+  }
+  if(!m||!m.term) return;
+  var t=m.term;
+  if(t.loaded||t.loading) return;
+  var container=document.querySelector('[data-msg-id="'+msgId+'"] .term-content');
+  startTermLoad(m, container);
+}
+function buildTermCard(msg){
+  var card=document.createElement('div');
+  card.className='term-card'+(msg.term.expanded?' expanded':'');
+  var header=document.createElement('div');
+  header.className='term-header';
+  var titleEl=document.createElement('div');
+  titleEl.className='term-header-title';
+  var labelText='📖 '+(msg.term.keyword?('词条：'+msg.term.query+'['+msg.term.keyword+']'):('词条：'+msg.term.query));
+  titleEl.innerHTML='<span class="q"></span>';
+  titleEl.querySelector('.q').textContent=labelText;
+  var srcTag=document.createElement('span');
+  srcTag.className='term-src-tag hidden';
+  titleEl.appendChild(srcTag);
+  var toggle=document.createElement('div');
+  toggle.className='term-header-toggle';
+  toggle.textContent=msg.term.expanded?'收起 ▴':'展开 ▾';
+  header.appendChild(titleEl); header.appendChild(toggle);
+  card.appendChild(header);
+  var content=document.createElement('div');
+  content.className='term-content'+(msg.term.expanded?'':' hidden');
+  card.appendChild(content);
+  header.addEventListener('click', function(){
+    var t=msg.term;
+    if(t.expanded){
+      t.expanded=false;
+      card.classList.remove('expanded');
+      content.classList.add('hidden');
+      toggle.textContent='展开 ▾';
+    } else {
+      t.expanded=true;
+      card.classList.add('expanded');
+      content.classList.remove('hidden');
+      toggle.textContent='收起 ▴';
+      if(t.loaded){ renderTermContent(msg,content); return; }
+      if(t.loading){ renderTermLoadingUI(content,t.query,t.keyword); return; }
+      if(!state.isHost && t.awaitingHost){
+        renderWaitingHostUI(content,t.query,t.keyword);
+        setTimeout(function(){
+          if(!t.loaded && !t.loading && t.awaitingHost){
+            t.awaitingHost=false;
+            startTermLoad(msg,content);
+          }
+        }, 4000);
+        return;
+      }
+      startTermLoad(msg,content);
+    }
+  }, false);
+  if(msg.term.expanded){
+    if(msg.term.loading) renderTermLoadingUI(content,msg.term.query,msg.term.keyword);
+    else if(msg.term.loaded) renderTermContent(msg,content);
+    else if(!state.isHost && msg.term.awaitingHost) renderWaitingHostUI(content,msg.term.query,msg.term.keyword);
+    else startTermLoad(msg,content);
+  }
+  return card;
+}
+function buildTermActions(msg, container){
+  var t=msg.term;
+  var box=document.createElement('div');
+  box.className='term-actions';
+  var rb=document.createElement('button');
+  rb.type='button'; rb.className='retry'; rb.textContent='重试';
+  rb.addEventListener('click', function(e){
+    if(e&&e.stopPropagation) e.stopPropagation();
+    t.loaded=false; t.loading=false; t.candidates=null; t.data=null;
+    t.selected=null; t.error=null; t.errKind=null; t.errText=null;
+    startTermLoad(msg, container);
+  }, false);
+  box.appendChild(rb);
+  var kw=encodeURIComponent(t.keyword?(t.query+' '+t.keyword):t.query);
+  var links=[
+    ['百度百科','https://baike.baidu.com/search/word?word='+kw],
+    ['维基百科','https://zh.wikipedia.org/wiki/Special:Search?search='+kw],
+    ['萌娘百科','https://zh.moegirl.org.cn/index.php?search='+kw]
+  ];
+  for(var i=0;i<links.length;i++){
+    (function(p){
+      var a=document.createElement('a');
+      a.href=p[1]; a.target='_blank'; a.rel='noopener noreferrer'; a.textContent=p[0];
+      a.addEventListener('click', function(e){ if(e&&e.stopPropagation) e.stopPropagation(); }, false);
+      box.appendChild(a);
+    })(links[i]);
+  }
+  return box;
+}
+function renderTermContent(msg, container){
+  renderTermContentInner(msg, container);
+  updateTermHeader(msg, container);
+}
+function renderTermContentInner(msg, container){
+  container.innerHTML='';
+  var t=msg.term;
+  var candidates=t.candidates||[];
+  if(candidates.length===0){
+    var nf=document.createElement('div');
+    nf.className='term-not-found';
+    var label=t.keyword?(t.query+'['+t.keyword+']'):t.query;
+    if(t.errText&&t.errKind!=='Empty'){
+      var w=document.createElement('div');
+      w.className='term-warn';
+      w.textContent='已自动重试 '+TERM_MAX_RETRY+' 次仍失败：'+t.errText+'。可点「重试」，或直接去下面站点搜索。';
+      container.appendChild(w);
+    }
+    nf.innerHTML='没找到 <span class="q">'+escapeHtml(label)+'</span> 对应的词条。'+
+      '<br><span class="hint">试试 @du'+escapeHtml(t.query)+'[关键词] 精确查找</span>';
+    container.appendChild(nf);
+    container.appendChild(buildTermActions(msg, container));
+    return;
+  }
+  if(t.selected!==null&&t.selected!==undefined&&t.data){ renderSingleCard(container,t.data,msg); return; }
+  if(candidates.length===1){ t.data=candidates[0]; t.selected=0; renderSingleCard(container,candidates[0],msg); registerPendingChoice(msg,candidates); return; }
+  var intro=document.createElement('div');
+  intro.className='term-intro';
+  intro.textContent='找到 '+candidates.length+' 个相关词条（已按相关度排序）：';
+  container.appendChild(intro);
+  var ul=document.createElement('ul');
+  ul.className='term-choices';
+  var shown=Math.min(5,candidates.length);
+  for(var i=0;i<shown;i++){
+    (function(idx,c){
+      var li=document.createElement('li');
+      li.className='term-choice';
+      var num=document.createElement('span');
+      num.className='num'; num.textContent=(idx+1);
+      var title=document.createElement('span');
+      title.className='title'; title.textContent=c.title;
+      li.appendChild(num); li.appendChild(title);
+      if(c.abstract){
+        var desc=document.createElement('span');
+        desc.className='desc';
+        desc.textContent=c.abstract.slice(0,30)+(c.abstract.length>30?'…':'');
+        li.appendChild(desc);
+      }
+      li.addEventListener('click', function(e){ e.stopPropagation(); selectTermCandidate(msg,idx); }, false);
+      ul.appendChild(li);
+    })(i,candidates[i]);
+  }
+  container.appendChild(ul);
+  if(candidates.length>5){ var more=document.createElement('div'); more.className='term-more'; more.textContent='等 '+candidates.length+' 个词条'; container.appendChild(more); }
+  var hint=document.createElement('div');
+  hint.className='term-hint';
+  hint.textContent='点击选择，或在聊天里回复词条名 / 序号';
+  container.appendChild(hint);
+  registerPendingChoice(msg,candidates);
+}
+function renderSingleCard(container, data, msg){
+  container.innerHTML='';
+  var body=document.createElement('div'); body.className='term-body';
+  if(data.image){
+    var img=document.createElement('img');
+    img.className='term-img'; img.src=data.image; img.alt=data.title;
+    img.loading='lazy';
+    img.referrerPolicy='no-referrer';
+    img.onerror=function(){ img.style.display='none'; };
+    body.appendChild(img);
+  }
+  var text=document.createElement('div'); text.className='term-text';
+  var tEl=document.createElement('div'); tEl.className='term-title'; tEl.textContent=data.title;
+  text.appendChild(tEl);
+  var aEl=document.createElement('div'); aEl.className='term-abstract'; aEl.textContent=data.abstract||'（暂无摘要内容）';
+  text.appendChild(aEl);
+  body.appendChild(text);
+  container.appendChild(body);
+  var meta=document.createElement('div'); meta.className='term-meta';
+  var src=document.createElement('span'); src.className='term-source';
+  src.textContent='来源：'+(data.source||(msg&&termSourceOf(msg))||'百科');
+  var link=document.createElement('a');
+  link.className='term-link'; link.href=data.url; link.target='_blank'; link.rel='noopener noreferrer';
+  link.textContent='查看完整词条 ›';
+  meta.appendChild(src); meta.appendChild(link);
+  container.appendChild(meta);
+  if(msg&&msg.term&&msg.term.candidates&&msg.term.candidates.length>1){
+    var back=document.createElement('div');
+    back.className='term-hint'; back.style.cursor='pointer';
+    back.textContent='← 返回候选列表';
+    back.addEventListener('click', function(e){
+      if(e&&e.stopPropagation) e.stopPropagation();
+      msg.term.selected=null; msg.term.data=null;
+      renderTermContent(msg, container);
+    }, false);
+    container.appendChild(back);
+  }
+}
+function registerPendingChoice(msg, candidates){ pendingChoice={candidates:candidates, msgId:msg.id, msg:msg, ts:Date.now()}; }
+function selectTermCandidate(msg, idx){
+  if(!msg.term||!msg.term.candidates||!msg.term.candidates[idx]) return;
+  msg.term.selected=idx;
+  msg.term.data=msg.term.candidates[idx];
+  var root=document.querySelector('[data-msg-id="'+msg.id+'"]');
+  if(root){
+    var oldCard=root.querySelector('.term-card');
+    if(oldCard) oldCard.remove();
+    root.appendChild(buildTermCard(msg));
+  }
+  if(pendingChoice&&pendingChoice.msgId===msg.id) pendingChoice=null;
+}
+function tryResolveChoice(text){
+  if(!pendingChoice) return false;
+  if(Date.now()-pendingChoice.ts>PENDING_CHOICE_TTL){ pendingChoice=null; return false; }
+  var cleaned=String(text||'').trim();
+  if(!cleaned) return false;
+  var numMatch=cleaned.match(/^([1-9])(?:[\.、,)）]|$)/);
+  if(!numMatch) numMatch=cleaned.match(/^第?\s*([1-9])\s*(?:个|条)?$/);
+  if(numMatch){
+    var idx=parseInt(numMatch[1],10)-1;
+    if(idx>=0&&idx<pendingChoice.candidates.length){ selectTermCandidate(pendingChoice.msg,idx); return true; }
+  }
+  var bestIdx=-1, bestScore=0;
+  for(var i=0;i<pendingChoice.candidates.length;i++){
+    var c=pendingChoice.candidates[i];
+    var cTitle=cleanTitle(c.title);
+    var s1=jaccard(cleaned,c.title);
+    var s2=jaccard(cleaned.replace(/\s+/g,''),cTitle);
+    var score=Math.max(s1,s2);
+    if(cTitle===cleanTitle(cleaned)) score=1;
+    else if(cTitle.indexOf(cleaned)!==-1) score=Math.max(score,0.4);
+    if(score>bestScore){ bestScore=score; bestIdx=i; }
+  }
+  if(bestIdx>=0&&bestScore>0.2){ selectTermCandidate(pendingChoice.msg,bestIdx); return true; }
+  return false;
+}
+
+/* ==================== 消息系统（ID upsert） ==================== */
+function getMessagesEl(){ return document.getElementById('messages'); }
+function isNearBottom(){ var box=getMessagesEl(); if(!box) return true; return box.scrollTop+box.clientHeight>=box.scrollHeight-60; }
+
+function mergeTermState(oldT, newT){
+  if(!oldT) return newT;
+  if(!newT) return oldT;
+  var m={};
+  for(var k in oldT) m[k]=oldT[k];
+  for(var k2 in newT) m[k2]=newT[k2];
+  if(oldT.loaded && oldT.candidates && oldT.candidates.length){
+    m.loaded=true;
+    m.loading=false;
+    m.candidates=oldT.candidates;
+    m.source=oldT.source;
+    m.data=oldT.data;
+    m.selected=oldT.selected;
+    m.errKind=oldT.errKind;
+    m.errText=oldT.errText;
+  }
+  if(oldT.expanded) m.expanded=true;
+  return m;
+}
+
+function buildMessageNode(msg){
+  if(msg.kind==='system'){
+    var el=document.createElement('div');
+    el.className='sys'+(msg.error?' error':'')+(msg.highlight?' highlight':'');
+    el.textContent=msg.text||'';
+    el.setAttribute('data-msg-id',msg.id);
+    return el;
+  }
+  var root=document.createElement('div');
+  root.className='msg'+(msg.self?' self':'');
+  root.setAttribute('data-msg-id',msg.id);
+  var meta=document.createElement('div');
+  meta.className='meta';
+  meta.textContent=(msg.nick||'匿名')+' · '+fmtTime(msg.ts);
+  root.appendChild(meta);
+  if(msg.kind==='chat'){
+    var body=document.createElement('div'); body.className='body';
+    body.textContent=msg.text||'';
+    root.appendChild(body);
+    if(msg.term&&msg.term.query) root.appendChild(buildTermCard(msg));
+  } else if(msg.kind==='image'){
+    var bodyI=document.createElement('div'); bodyI.className='body img-body';
+    var img=document.createElement('img'); img.className='msg-img'; img.src=msg.dataUrl;
+    img.onclick=function(){ openLightbox(msg.dataUrl); };
+    bodyI.appendChild(img); root.appendChild(bodyI);
+  } else if(msg.kind==='audio'){
+    var bodyA=document.createElement('div'); bodyA.className='body';
+    var wrap=document.createElement('div'); wrap.className='audio-msg';
+    var btn=document.createElement('button'); btn.className='audio-play-btn'; btn.type='button'; btn.textContent='▶';
+    var waves=document.createElement('div'); waves.className='audio-waves';
+    for(var i=0;i<12;i++){ var sp=document.createElement('span'); waves.appendChild(sp); }
+    var dur=document.createElement('div'); dur.className='audio-dur';
+    dur.textContent=(msg.meta&&msg.meta.duration)?fmtDur(msg.meta.duration):'';
+    var audio=document.createElement('audio'); audio.preload='metadata'; audio.src=msg.dataUrl;
+    var playing=false;
+    audio.onended=function(){ playing=false; btn.textContent='▶'; };
+    btn.onclick=function(){
+      if(playing){ audio.pause(); playing=false; btn.textContent='▶'; }
+      else { try{audio.currentTime=0;}catch(e){} var pr=audio.play(); if(pr&&pr.then)pr['catch'](function(){}); playing=true; btn.textContent='❚❚'; }
+    };
+    wrap.appendChild(btn); wrap.appendChild(waves); wrap.appendChild(dur);
+    bodyA.appendChild(wrap); bodyA.appendChild(audio);
+    root.appendChild(bodyA);
+  }
+  return root;
+}
+function pushMessage(msg){
+  msg.id=msg.id||makeMsgId();
+  msg.ts=msg.ts||Date.now();
+
+  var existing=-1;
+  for(var i=0;i<allMessages.length;i++){
+    if(allMessages[i].id===msg.id){ existing=i; break; }
+  }
+  var isNew=existing<0;
+  if(isNew){
+    allMessages.push(msg);
+    persistChatLog(msg);
+  } else {
+    var old=allMessages[existing];
+    if(msg.term && old.term) msg.term=mergeTermState(old.term, msg.term);
+    if(old.self) msg.self=true;
+    allMessages[existing]=msg;
+  }
+
+  var box=getMessagesEl();
+  if(!box) return;
+  var oldNode=box.querySelector('[data-msg-id="'+msg.id+'"]');
+  if(oldNode){
+    var wasAtBottom=isNearBottom();
+    var newNode=buildMessageNode(msg);
+    oldNode.parentNode.replaceChild(newNode, oldNode);
+    if(wasAtBottom) box.scrollTop=box.scrollHeight;
+    return;
+  }
+  var node=buildMessageNode(msg);
+  box.appendChild(node);
+  var stick=chatAutoStick||msg.self||msg.kind==='system';
+  while(box.querySelectorAll('[data-msg-id]').length>displayedCount){
+    var first=box.querySelector('[data-msg-id]');
+    if(first) box.removeChild(first); else break;
+  }
+  updateLoadMoreHint();
+  if(stick) box.scrollTop=box.scrollHeight;
+}
+function updateLoadMoreHint(){
+  var box=getMessagesEl(); if(!box) return;
+  var existing=box.querySelector('.load-more-hint');
+  var remaining=allMessages.length-displayedCount;
+  if(existing){
+    if(remaining<=0) existing.remove();
+    else existing.textContent='↑ 上翻加载更早的 '+Math.min(CHAT_LOAD_MORE,remaining)+' 条消息（还有 '+remaining+' 条）';
+  } else if(remaining>0){
+    var hint=document.createElement('div');
+    hint.className='load-more-hint';
+    hint.textContent='↑ 上翻加载更早的 '+Math.min(CHAT_LOAD_MORE,remaining)+' 条消息（还有 '+remaining+' 条）';
+    hint.addEventListener('click', loadMoreMessages, false);
+    box.insertBefore(hint, box.firstChild);
+  }
+}
+function rebuildMessages(){
+  var box=getMessagesEl(); if(!box) return;
+  var oldHeight=box.scrollHeight, oldTop=box.scrollTop;
+  box.innerHTML='';
+  var total=allMessages.length;
+  var start=Math.max(0,total-displayedCount);
+  if(start>0){
+    var hint=document.createElement('div');
+    hint.className='load-more-hint';
+    hint.textContent='↑ 上翻加载更早的 '+Math.min(CHAT_LOAD_MORE,start)+' 条消息（还有 '+start+' 条）';
+    hint.addEventListener('click', loadMoreMessages, false);
+    box.appendChild(hint);
+  }
+  for(var i=start;i<total;i++) box.appendChild(buildMessageNode(allMessages[i]));
+  setTimeout(function(){
+    var newHeight=box.scrollHeight;
+    box.scrollTop=newHeight-oldHeight+oldTop;
+  }, 0);
+}
+function loadMoreMessages(){
+  var total=allMessages.length;
+  var currentStart=Math.max(0,total-displayedCount);
+  if(currentStart<=0) return;
+  displayedCount+=CHAT_LOAD_MORE;
+  rebuildMessages();
+}
+function bindMessagesScroll(){
+  var box=getMessagesEl(); if(!box) return;
+  var lastAutoLoad=0;
+  box.addEventListener('scroll', function(){
+    var now=Date.now();
+    if(box.scrollTop<=20&&allMessages.length>displayedCount){
+      if(now-lastAutoLoad>500){ lastAutoLoad=now; loadMoreMessages(); }
+    }
+    chatAutoStick=isNearBottom();
+  }, false);
+}
+function openLightbox(src){ var l=$('#lightbox'), i=$('#lightboxImg'); if(!l||!i) return; i.src=src; l.classList.remove('hidden'); }
+function closeLightbox(){ var l=$('#lightbox'); if(l) l.classList.add('hidden'); }
+function isChatCollapsed(){ return chatPanelEl&&chatPanelEl.classList.contains('collapsed'); }
+function updateUnreadBadge(){ if(!unreadBadgeEl) return; if(unreadCount>0){ unreadBadgeEl.textContent=unreadCount>99?'99+':String(unreadCount); unreadBadgeEl.style.display='inline-flex'; } else unreadBadgeEl.style.display='none'; }
+function noteUnread(){ if(!isChatCollapsed()) return; unreadCount++; updateUnreadBadge(); }
+function toggleChat(){
+  if(!chatPanelEl) return;
+  if(isChatCollapsed()){
+    chatPanelEl.classList.remove('collapsed');
+    unreadCount=0; updateUnreadBadge();
+    setTimeout(function(){ var b=getMessagesEl(); if(b) b.scrollTop=b.scrollHeight; }, 0);
+  } else { chatPanelEl.classList.add('collapsed'); hideEmojiPanel(); }
+}
+function addSystem(text, isError, highlight){
+  pushMessage({kind:'system', id:makeMsgId(), text:text||'', error:!!isError, highlight:!!highlight, ts:Date.now()});
+  noteUnread();
+}
+function hydrateFromLocalHistory(){
+  if(!/^\d{6}$/.test(String(state.roomId||''))) return;
+  var arr=loadHistory(state.roomId);
+  if(!arr.length) return;
+  var have={};
+  for(var i=0;i<allMessages.length;i++){ if(allMessages[i].id) have[allMessages[i].id]=1; }
+  var added=0;
+  for(var j=0;j<arr.length;j++){
+    var m=arr[j];
+    if(!m||!m.id||have[m.id]) continue;
+    have[m.id]=1;
+    var termState=null;
+    if(m.term && m.term.query){
+      termState={
+        query:m.term.query, keyword:m.term.keyword||null,
+        expanded:false, loaded:false, loading:false,
+        awaitingHost:true,
+        candidates:null, data:null, selected:null
+      };
+    }
+    allMessages.push({id:m.id,kind:'chat',nick:m.nick||'匿名',text:m.text||'',ts:m.ts||Date.now(),self:(m.nick===state.nick),term:termState});
+    added++;
+  }
+  if(!added) return;
+  allMessages.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+  displayedCount=Math.max(CHAT_INITIAL, allMessages.length);
+  rebuildMessages();
+  var box=getMessagesEl(); if(box) box.scrollTop=box.scrollHeight;
+}
+function mergeRemoteHistory(list){
+  if(!list || !list.length) return [];
+  var have = {};
+  for(var i=0;i<allMessages.length;i++){ if(allMessages[i].id) have[allMessages[i].id]=1; }
+  var added = [];
+  for(var j=0;j<list.length;j++){
+    var m = list[j];
+    if(!m || !m.id) continue;
+    if(have[m.id]) continue;
+    have[m.id] = 1;
+    var termState = null;
+    if(m.term && m.term.query){
+      termState = {
+        query:m.term.query, keyword:m.term.keyword||null,
+        expanded:false, loaded:false, loading:false,
+        awaitingHost:true,
+        candidates:null, data:null, selected:null
+      };
+    }
+    var msg = {
+      id:m.id, kind:'chat', nick:m.nick||'匿名', text:m.text||'',
+      ts:m.ts||Date.now(), self:(m.nick===state.nick), term:termState
+    };
+    allMessages.push(msg);
+    added.push({
+      id:msg.id, nick:msg.nick, text:msg.text, ts:msg.ts,
+      term: m.term ? { query:m.term.query, keyword:m.term.keyword||null } : null
+    });
+  }
+  if(added.length){
+    bulkPersistHistory(added);
+    allMessages.sort(function(a,b){ return (a.ts||0)-(b.ts||0); });
+    displayedCount = Math.max(CHAT_INITIAL, Math.min(allMessages.length, displayedCount + added.length));
+    rebuildMessages();
+    var box = getMessagesEl();
+    if(box && chatAutoStick) box.scrollTop = box.scrollHeight;
+  }
+  return added;
+}
+function mergeHistory(list){ return mergeRemoteHistory(list); }
+function sendHistoryTo(conn){
+  try{
+    var arr = loadHistory(state.roomId);
+    if(!arr.length) return;
+    var recent = arr.slice(-HISTORY_SYNC_COUNT).map(function(m){
+      return { id:m.id, nick:m.nick, text:m.text, ts:m.ts,
+               term: m.term ? {query:m.term.query, keyword:m.term.keyword||null} : null };
+    });
+    var BATCH = 10;
+    var idx = 0;
+    function sendBatch(){
+      if(!conn || !conn.open) return;
+      if(idx >= recent.length) return;
+      var batch = recent.slice(idx, idx + BATCH);
+      idx += BATCH;
+      safeSend(conn, {type:'history', messages:batch});
+      setTimeout(sendBatch, 200);
+    }
+    sendBatch();
+  }catch(e){}
+}
+function sendLocalHistoryToHost(){
+  if(state.isHost) return;
+  if(state.clientHistorySent) return;
+  if(!state.hostConn || !state.hostConn.open) return;
+  var arr = loadHistory(state.roomId);
+  if(!arr.length){ state.clientHistorySent = true; return; }
+
+  var recent = arr.slice(-HISTORY_CLIENT_SYNC).map(function(m){
+    return { id:m.id, nick:m.nick, text:m.text, ts:m.ts,
+             term: m.term ? {query:m.term.query, keyword:m.term.keyword||null} : null };
+  });
+
+  var BATCH = HISTORY_SEND_BATCH;
+  var idx = 0;
+
+  function sendBatch(){
+    if(!state.hostConn || !state.hostConn.open) return;
+    if(idx >= recent.length){
+      try{ state.hostConn.send({type:'client-history-end'}); }catch(e){}
+      state.clientHistorySent = true;
+      return;
+    }
+    var batch = recent.slice(idx, idx + BATCH);
+    idx += BATCH;
+    var done = idx >= recent.length;
+    try{ state.hostConn.send({type:'client-history', messages:batch, done:done}); }
+    catch(e){ return; }
+    setTimeout(sendBatch, HISTORY_SEND_GAP);
+  }
+  sendBatch();
+}
+function broadcastMergedHistory(added, exceptPeer){
+  if(!state.isHost) return;
+  if(!added || !added.length) return;
+  var BATCH = HISTORY_SEND_BATCH;
+  var idx = 0;
+  function sendBatch(){
+    if(idx >= added.length) return;
+    var batch = added.slice(idx, idx + BATCH);
+    idx += BATCH;
+    state.conns.forEach(function(c, pid){
+      if(exceptPeer && pid === exceptPeer) return;
+      if(c && c.open){
+        try{ c.send({type:'history-merge', messages:batch}); }catch(e){}
+      }
+    });
+    setTimeout(sendBatch, HISTORY_SEND_GAP);
+  }
+  sendBatch();
+}
+
+/* ==================== Peer 通信 ==================== */
+var PEER_OPTS={ debug:1, config:{ iceServers:[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}] } };
+function enqueueSend(conn, msg){ sendQueue.push({conn:conn,msg:msg}); if(!sendProcessing) processSendQueue(); }
+function processSendQueue(){
+  if(sendQueue.length===0){ sendProcessing=false; return; }
+  sendProcessing=true;
+  var it=sendQueue.shift();
+  if(it.conn&&it.conn.open){ try{ it.conn.send(it.msg); }catch(e){} }
+  setTimeout(processSendQueue, 4);
+}
+function startHeartbeat(){
+  stopHeartbeat();
+  heartbeatTimer=setInterval(function(){
+    if(document.hidden) return;
+    renewSession();
+    if(state.isHost){
+      state.conns.forEach(function(c){ if(c&&c.open){ try{c.send({type:'ping',ts:Date.now()});}catch(e){} } });
+    } else if(state.hostConn&&state.hostConn.open){
+      try{ state.hostConn.send({type:'ping',ts:Date.now()}); }catch(e){}
+    }
+  }, HEARTBEAT_INTERVAL);
+}
+function stopHeartbeat(){ if(heartbeatTimer){ clearInterval(heartbeatTimer); heartbeatTimer=null; } }
+function broadcast(msg, except){
+  state.conns.forEach(function(c,id){
+    if(id===except) return;
+    if(c && c.open){ try{ c.send(msg); }catch(e){} }
+  });
+}
+function safeSend(conn, msg){ if(!conn||!conn.open) return; try{ conn.send(msg); }catch(e){} }
+function memberList(){ var o=[]; state.members.forEach(function(n,id){ o.push({id:id,nick:n}); }); return o; }
+function sendToRoom(msg){
+  if(state.hostConn){ enqueueSend(state.hostConn, msg); }
+  else { state.conns.forEach(function(c){ enqueueSend(c,msg); }); }
+}
+
+/* ============ iframe URL 监听 ============ */
+function checkIframeUrl(){
+  try{
+    var ifr=document.getElementById('player');
+    if(!ifr||!ifr.contentWindow) return null;
+    var href=ifr.contentWindow.location.href;
+    if(href&&href!=='about:blank'&&href.indexOf('javascript:')!==0&&/^https?:/i.test(href)) return href;
+  }catch(e){}
+  return null;
+}
+function trySyncFromIframe(silent){
+  if(!state.isHost||!state.connected) return false;
+  var newUrl=checkIframeUrl();
+  if(!newUrl||newUrl===state.url||newUrl===lastAutoUrl) return false;
+  if(!isMeaningfulUrlChange(state.url,newUrl)){ lastAutoUrl=newUrl; return false; }
+  lastAutoUrl=newUrl;
+  state.url=newUrl;
+  var inp=$('#urlEdit'); if(inp) inp.value=newUrl;
+  updateUrlTagDisplay();
+  updatePresetForUrl(newUrl);
+  syncUrlHash();
+  saveSession();
+  broadcast({type:'url', url:newUrl, by:state.nick, auto:true});
+  if(!silent) addSystem('检测到视频页切换，已自动同步', false, true);
+  return true;
+}
+var __lastMsgSync=0;
+function bindEmbedMessageSync(){
+  window.addEventListener('message', function(ev){
+    if(!state.isHost||!state.connected) return;
+    var now=Date.now();
+    if(now-__lastMsgSync<800) return;
+    __lastMsgSync=now;
+    var org=String((ev&&ev.origin)||'');
+    if(!/^https?:\/\/([a-z0-9-]+\.)*(bilibili\.com|youtube\.com|youtube-nocookie\.com)$/i.test(org)) return;
+    var txt='';
+    try{ txt=(typeof ev.data==='string')?ev.data:JSON.stringify(ev.data); }catch(e){ return; }
+    if(!txt||txt.length>6000) return;
+    var bv=(txt.match(/BV[0-9A-Za-z]{10}/)||[])[0];
+    if(!bv) return;
+    if(urlVideoKey(state.url)===bv.toUpperCase()) return;
+    var newUrl='https://player.bilibili.com/player.html?bvid='+bv+'&page=1&high_quality=1&danmaku=0&autoplay=0';
+    lastAutoUrl=newUrl;
+    state.url=newUrl;
+    var inp=$('#urlEdit'); if(inp) inp.value=newUrl;
+    updateUrlTagDisplay();
+    updatePresetForUrl(newUrl);
+    syncUrlHash();
+    saveSession();
+    broadcast({type:'url', url:newUrl, by:state.nick, auto:true});
+    addSystem('检测到播放器切换到 '+bv+'，已自动同步', false, true);
+  }, false);
+}
+function startIframePoll(){
+  if(iframePollTimer) return;
+  iframePollTimer=setInterval(function(){
+    if(document.hidden) return;
+    trySyncFromIframe(true);
+  }, 6000);
+}
+function stopIframePoll(){ if(iframePollTimer){ clearInterval(iframePollTimer); iframePollTimer=null; } }
+
+/* ==================== 发送消息 ==================== */
+function sendChat(){
+  var input=$('#chatInput'); if(!input) return;
+  var text=input.value.trim(); if(!text) return;
+  input.value='';
+  var wasChoice=tryResolveChoice(text);
+  var botCmd=parseBotCommand(text);
+  var ts=Date.now();
+  var mid=makeMsgId();
+  var msgData={
+    id:mid, kind:'chat', nick:state.nick, text:text, ts:ts, self:true,
+    term:botCmd?{
+      query:botCmd.term, keyword:botCmd.keyword,
+      expanded:true, loaded:false, loading:false,
+      awaitingHost: !state.isHost,
+      data:null, candidates:null, selected:null
+    }:null
+  };
+  pushMessage(msgData);
+  var bm={type:'chat', id:mid, nick:state.nick, text:text, ts:ts};
+  if(botCmd) bm.term={query:botCmd.term, keyword:botCmd.keyword};
+  sendToRoom(bm);
+  hideEmojiPanel();
+  if(wasChoice) toast('已选择词条');
+}
+function handleChatDisplay(nick, text, ts, term, self, id){
+  var termState=null;
+  if(term){
+    termState={
+      query:term.query,
+      keyword:term.keyword||null,
+      expanded:!!self,
+      loaded:false, loading:false,
+      awaitingHost:!state.isHost,
+      candidates:null, selected:null, data:null
+    };
+  }
+  pushMessage({id:id||makeMsgId(), kind:'chat', nick:nick, text:text, ts:ts, self:!!self, term:termState});
+  if(!self) noteUnread();
+}
+
+/* ==================== 房主连接管理 ==================== */
+function onHostConnection(conn){
+  conn.on('open', function(){ state.conns.set(conn.peer, conn); });
+  conn.on('data', function(data){ handleHostData(conn, data); });
+  conn.on('close', function(){
+    if(conn.__replaced){ return; }
+    var nick=state.members.get(conn.peer);
+    state.conns['delete'](conn.peer);
+    state.members['delete'](conn.peer);
+    var call=state.mediaCalls.get(conn.peer);
+    if(call){ try{call.close();}catch(e){} state.mediaCalls['delete'](conn.peer); }
+    state.identityToPeer.forEach(function(p,id){ if(p===conn.peer) state.identityToPeer.delete(id); });
+    if(nick){ addSystem(nick+' 离开了房间'); broadcast({type:'system', text:nick+' 离开了房间'}); }
+    broadcast({type:'members', members:memberList()});
+    renderMembers();
+  });
+}
+function handleHostData(conn, data){
+  if(!data||typeof data!=='object') return;
+  if(data.type==='ping'){ try{ if(conn.open) conn.send({type:'pong', ts:data.ts}); }catch(e){} return; }
+  if(data.type==='pong') return;
+  if(data.type==='media-start'){ onMediaStart(data); return; }
+  if(data.type==='media-chunk'){ onMediaChunk(data); return; }
+  if(data.type==='media-end'){ onMediaEnd(data); return; }
+  if(data.type==='client-history'){
+    var msgs = data.messages || [];
+    var added = mergeRemoteHistory(msgs);
+    if(added.length) broadcastMergedHistory(added, conn.peer);
+    return;
+  }
+  if(data.type==='client-history-end'){ return; }
+  if(data.type==='hello'){
+    var nick = String(data.nick||'匿名').slice(0,12);
+    var identityId = String(data.identityId||'').slice(0,64);
+
+    if(identityId){
+      var oldPeer = state.identityToPeer.get(identityId);
+      if(oldPeer && oldPeer !== conn.peer){
+        state.replacedPeers.add(oldPeer);
+        var oldConn = state.conns.get(oldPeer);
+        if(oldConn){ try{ oldConn.__replaced = true; oldConn.close(); }catch(e){} }
+        state.conns.delete(oldPeer);
+        state.members.delete(oldPeer);
+        var oldCall = state.mediaCalls.get(oldPeer);
+        if(oldCall){ try{ oldCall.close(); }catch(e){} }
+        state.mediaCalls.delete(oldPeer);
+      }
+      state.identityToPeer.set(identityId, conn.peer);
+    }
+
+    var seenKey = identityId ? ('__seen_'+identityId) : null;
+    var isKnown = false;
+    if(seenKey){
+      if(state[seenKey]) isKnown = true;
+      else state[seenKey] = true;
+    }
+
+    state.members.set(conn.peer, nick);
+    safeSend(conn, {
+      type:'welcome',
+      url:state.url,
+      roomId:state.roomId,
+      hostNick:state.nick,
+      members:memberList(),
+      shareActive:state.shareActive,
+      shareKind:state.shareKind
+    });
+    setTimeout(function(){ sendHistoryTo(conn); }, 120);
+    setTimeout(function(){ safeSend(conn, { type:'ask-client-history' }); }, 380);
+    if(state.shareActive && state.shareStream){
+      setTimeout(function(){ callPeerWithStream(conn.peer); }, 400);
+      setTimeout(function(){ callPeerWithStream(conn.peer); }, 1200);
+    }
+    addSystem(nick + (isKnown ? ' 重新连接了房间' : ' 加入了房间'));
+    broadcast({type:'system', text:nick + (isKnown ? ' 重新连接了房间' : ' 加入了房间')}, conn.peer);
+    broadcast({type:'members', members:memberList()});
+    renderMembers();
+    saveSession();
+    return;
+  }
+  if(data.type==='chat'){
+    var sNick=state.members.get(conn.peer)||'匿名';
+    var text=String(data.text==null?'':data.text).slice(0,2000).trim();
+    if(!text) return;
+    var ts=Date.now();
+    var mid=data.id||makeMsgId();
+    broadcast({type:'chat', id:mid, nick:sNick, text:text, ts:ts, term:data.term||null}, conn.peer);
+    handleChatDisplay(sNick, text, ts, data.term||null, false, mid);
+    if(data.term && data.term.query){
+      setTimeout(function(){ triggerHostTermQuery(mid); }, 80);
+    }
+    return;
+  }
+  if(data.type==='share-request'){ if(state.shareActive&&state.shareStream) callPeerWithStream(conn.peer); return; }
+  if(data.type==='url-request'){ safeSend(conn, {type:'url', url:state.url||'', by:'host'}); return; }
+}
+function handleGuestData(data){
+  if(!data||typeof data!=='object') return;
+  if(data.type==='ping'){ if(state.hostConn&&state.hostConn.open){ try{ state.hostConn.send({type:'pong', ts:data.ts}); }catch(e){} } return; }
+  if(data.type==='pong') return;
+  if(data.type==='media-start'){ onMediaStart(data); return; }
+  if(data.type==='media-chunk'){ onMediaChunk(data); return; }
+  if(data.type==='media-end'){ onMediaEnd(data); return; }
+  if(data.type==='history'){ mergeRemoteHistory(data.messages||[]); return; }
+  if(data.type==='history-merge'){ mergeRemoteHistory(data.messages||[]); return; }
+  if(data.type==='ask-client-history'){ sendLocalHistoryToHost(); return; }
+  if(data.type==='term-result'){
+    var m=null;
+    for(var i=0;i<allMessages.length;i++){
+      if(allMessages[i].id===data.msgId){ m=allMessages[i]; break; }
+    }
+    if(m && m.term){
+      m.term.loaded=true;
+      m.term.loading=false;
+      m.term.awaitingHost=false;
+      m.term.candidates=data.candidates||[];
+      m.term.source=data.source||null;
+      m.term.errKind=data.errKind||null;
+      m.term.errText=data.errText||null;
+      if(m.term.candidates.length===1) m.term.data=m.term.candidates[0];
+      pushMessage(m);
+    }
+    return;
+  }
+  if(data.type==='chat'){ handleChatDisplay(data.nick||'匿名', String(data.text||''), data.ts, data.term||null, false, data.id||null); }
+  else if(data.type==='system'){ addSystem(String(data.text||'')); }
+  else if(data.type==='members'){ state.members=new Map((data.members||[]).map(function(m){ return [m.id,m.nick]; })); renderMembers(); }
+  else if(data.type==='url'){
+    var u=String(data.url||'');
+    if(u){ state.url=u; setPlayer(u); syncUrlHash(); saveSession(); addSystem(data.auto?'🔄 房主切换了视频（自动）':'房主切换了视频'); }
+  }
+  else if(data.type==='share-start'){
+    state.shareActive=true;
+    state.shareKind=data.kind||'screen';
+    var b=$('#shareBadge'); if(b) b.classList.remove('hidden');
+    var bt=$('#shareBadgeText'); if(bt) bt.textContent=(state.shareKind==='camera')?'房主共享摄像头中':'房主共享中';
+    addSystem(state.shareKind==='camera'?'📡 房主开启了摄像头共享':'📡 房主开启了共享屏幕');
+    if(state.hostConn&&state.hostConn.open) safeSend(state.hostConn, {type:'share-request'});
+  }
+  else if(data.type==='share-stop'){
+    state.shareActive=false;
+    var b2=$('#shareBadge'); if(b2) b2.classList.add('hidden');
+    addSystem('房主停止了共享');
+    onShareStreamClosed();
+  }
+}
+function onHostLost(){
+  state.connected=false;
+  var ci=$('#chatInput'); if(ci) ci.disabled=true;
+  onShareStreamClosed();
+  state.shareActive=false;
+  var b=$('#shareBadge'); if(b) b.classList.add('hidden');
+  if(state.reconnecting) return;
+  addSystem('⚠️ 与房主的连接已断开，正在尝试重连…', true);
+  state.reconnecting=true;
+  reconnectAttempts=0;
+  scheduleReconnectTick(1200);
+}
+function scheduleReconnectTick(delay){
+  if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
+  reconnectTimer=setTimeout(attemptReconnect, delay||2000);
+}
+function attemptReconnect(){
+  reconnectTimer=null;
+  if(state.isHost){ state.reconnecting=false; return; }
+  if(state.connected){ state.reconnecting=false; return; }
+  if(reconnectAttempts>=30){
+    state.reconnecting=false;
+    addSystem('重连失败，请重新加入房间', true);
+    var ci=$('#chatInput'); if(ci) ci.disabled=false;
+    clearSession();
+    setTimeout(function(){ teardown(); showScreen('lobby'); showMsg('与房主的连接已断开，请重新加入', true); }, 900);
+    return;
+  }
+  reconnectAttempts++;
+  var nick=state.nick||'访客';
+  var roomId=state.roomId;
+  try{ if(state.hostConn){ state.hostConn.close(); } }catch(e){}
+  state.hostConn=null;
+  try{ if(state.peer){ state.peer.destroy(); } }catch(e){}
+  state.peer=null;
+  state.clientHistorySent = false;
+  startGuestSession(nick, roomId, true);
+  var delay = Math.min(15000, 2000 + reconnectAttempts*800);
+  scheduleReconnectTick(delay);
+}
+function onReconnected(){
+  state.connected=true;
+  state.reconnecting=false;
+  reconnectAttempts=0;
+  if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
+  var ci=$('#chatInput'); if(ci) ci.disabled=false;
+  var b=$('#shareBadge'); if(b) b.classList.toggle('hidden', !state.shareActive);
+  renderMembers();
+  addSystem('✅ 已重新连接到房间');
+  saveSession();
+  if(state.shareActive&&state.hostConn&&state.hostConn.open) safeSend(state.hostConn, {type:'share-request'});
+  setTimeout(function(){ sendLocalHistoryToHost(); }, 800);
+}
+
+/* ==================== 共享屏幕 ==================== */
+function callPeerWithStream(peerId){
+  if(!state.shareStream||!state.peer) return;
+  var old=state.mediaCalls.get(peerId);
+  if(old){ try{old.close();}catch(e){} state.mediaCalls['delete'](peerId); }
+  try{
+    var call=state.peer.call(peerId, state.shareStream);
+    state.mediaCalls.set(peerId, call);
+    try{
+      var pc=call.peerConnection;
+      if(pc){
+        var senders=pc.getSenders?pc.getSenders():[];
+        for(var si=0;si<senders.length;si++){
+          var s=senders[si];
+          if(s && s.track && s.track.kind==='video'){
+            var p=s.getParameters();
+            p.encodings = p.encodings && p.encodings.length ? p.encodings : [{}];
+            p.encodings[0].maxBitrate = 1500000;
+            p.encodings[0].maxFramerate = 24;
+            try{ s.setParameters(p)['catch'](function(){}); }catch(e2){}
+          }
+        }
+      }
+    }catch(e){}
+    call.on('close', function(){ state.mediaCalls['delete'](peerId); });
+    call.on('error', function(){ state.mediaCalls['delete'](peerId); });
+  }catch(e){}
+}
+function startShare(){
+  if(state.shareActive){ stopShare(); return; }
+  if(!state.isHost){ toast('只有房主可以发起共享'); return; }
+  if(!env.isSecure){ toast('当前环境不允许抓取画面（请用 https 或本地文件打开）'); return; }
+  if(env.canShareScreen){ shareScreenFlow(); return; }
+  if(env.canShareCamera){ shareCameraFlow(); return; }
+  toast('当前浏览器不支持共享屏幕或摄像头');
+}
+function shareScreenFlow(){
+  toast('请在弹窗里选择要共享的屏幕、窗口或标签页…');
+  getDisplayMediaCompat(function(err, s){
+    if(s&&streamHasVideo(s)){ beginShare(s, 'screen'); return; }
+    if(err&&(err.name==='NotAllowedError'||err.name==='PermissionDeniedError')){ toast('已取消共享'); return; }
+    if(env.canShareCamera){ toast('屏幕共享不可用，改为共享摄像头'); shareCameraFlow(); return; }
+    toast('共享失败：'+mediaErrText(err));
+  });
+}
+function shareCameraFlow(){
+  var facing=state.shareFacing||'user';
+  getUserMediaCompat({video:{facingMode:facing, width:{ideal:1280,max:1280}, height:{ideal:720,max:720}, frameRate:{ideal:24,max:24}}, audio:true}, function(err, s){
+    if(s&&streamHasVideo(s)){ beginShare(s, 'camera'); return; }
+    getUserMediaCompat({video:true, audio:false}, function(err2, s2){
+      if(s2&&streamHasVideo(s2)){ beginShare(s2, 'camera'); return; }
+      var e=err2||err;
+      var n=(e&&e.name)||'';
+      if(n==='NotAllowedError'||n==='PermissionDeniedError') toast('已取消共享（摄像头权限被拒绝）');
+      else toast('共享摄像头失败：'+mediaErrText(e));
+    });
+  });
+}
+function beginShare(s, kind){
+  state.shareStream=s;
+  state.shareActive=true;
+  state.shareKind=kind||'screen';
+  updateShareBtn();
+  var vt=s.getVideoTracks?s.getVideoTracks()[0]:null;
+  if(vt){
+    try{ if(vt.contentHint!==undefined) vt.contentHint='detail'; }catch(e){}
+    var onEnd=function(){ if(state.shareActive) stopShare(); };
+    try{ vt.onended=onEnd; }catch(e){ if(vt.addEventListener) vt.addEventListener('ended', onEnd, false); }
+  }
+  state.conns.forEach(function(c,pid){ callPeerWithStream(pid); });
+  broadcast({type:'share-start', by:state.nick, kind:state.shareKind});
+  if(state.shareKind==='camera'){ addSystem('你已开始共享摄像头（手机可以这样把画面投给大家）'); toast('正在共享摄像头'); }
+  else { addSystem('你已开始共享屏幕'); toast('共享中，大家都看到你的画面了'); }
+  setTimeout(function(){ state.conns.forEach(function(c,pid){ callPeerWithStream(pid); }); }, 1200);
+}
+function switchCameraFacing(){
+  if(!state.shareActive||state.shareKind!=='camera'){ toast('当前没有共享摄像头'); return; }
+  var next=(state.shareFacing==='user')?'environment':'user';
+  var old=state.shareStream;
+  getUserMediaCompat({video:{facingMode:next, width:{ideal:1280,max:1280}, height:{ideal:720,max:720}}, audio:true}, function(err, s){
+    if(s&&streamHasVideo(s)){ applyCameraSwitch(next, s, old); return; }
+    getUserMediaCompat({video:{facingMode:next}, audio:false}, function(err2, s2){
+      if(s2&&streamHasVideo(s2)){ applyCameraSwitch(next, s2, old); return; }
+      toast('切换镜头失败：'+mediaErrText(err2||err));
+    });
+  });
+}
+function applyCameraSwitch(facing, stream, old){
+  state.shareFacing=facing;
+  state.shareStream=stream;
+  var vt=stream.getVideoTracks?stream.getVideoTracks()[0]:null;
+  if(vt){
+    try{ if(vt.contentHint!==undefined) vt.contentHint='detail'; }catch(e){}
+    var onEnd=function(){ if(state.shareActive) stopShare(); };
+    try{ vt.onended=onEnd; }catch(e){ if(vt.addEventListener) vt.addEventListener('ended', onEnd, false); }
+  }
+  stopStream(old);
+  state.conns.forEach(function(c,pid){ callPeerWithStream(pid); });
+  toast('已切换到'+(facing==='user'?'前置':'后置')+'摄像头');
+}
+function stopShare(){
+  if(!state.shareActive) return;
+  stopStream(state.shareStream);
+  state.shareStream=null;
+  state.mediaCalls.forEach(function(c){ try{c.close();}catch(e){} });
+  state.mediaCalls.clear();
+  state.shareActive=false;
+  updateShareBtn();
+  broadcast({type:'share-stop'});
+  addSystem('已停止共享');
+}
+function safeVideoPlay(v, ok, fail){
+  var r;
+  try{ r=v.play(); }catch(e){ fail(e); return; }
+  if(r&&typeof r.then==='function') r.then(ok, fail);
+  else ok();
+}
+function bindStreamToVideo(v, s){
+  if('srcObject' in v){ try{ v.srcObject=s; return; }catch(e){} }
+  try{
+    if(window.URL&&window.URL.createObjectURL) v.src=window.URL.createObjectURL(s);
+    else if(window.webkitURL&&window.webkitURL.createObjectURL) v.src=window.webkitURL.createObjectURL(s);
+  }catch(e){}
+}
+function onShareStreamReceived(stream){
+  var video=document.getElementById('shareVideo'); if(!video) return;
+  state.remoteStream=stream;
+  try{ video.playsInline=true; video.setAttribute('playsinline',''); video.setAttribute('webkit-playsinline',''); video.autoplay=true; }catch(e){}
+  var vt=stream.getVideoTracks?stream.getVideoTracks()[0]:null;
+  if(vt){
+    var onEnd=function(){ onShareStreamClosed(); };
+    try{ vt.onended=onEnd; }catch(e){ if(vt.addEventListener) vt.addEventListener('ended', onEnd, false); }
+  }
+  bindStreamToVideo(video, stream);
+  video.muted=true;
+  switchToShareView(true);
+  safeVideoPlay(video, function(){
+    var ub=$('#shareUnmuteBtn'); if(ub) ub.classList.remove('hidden');
+    var po=$('#sharePlayOverlay'); if(po) po.classList.add('hidden');
+  }, function(){
+    var po=$('#sharePlayOverlay'); if(po) po.classList.remove('hidden');
+  });
+  video.onclick=function(){
+    video.muted=true;
+    safeVideoPlay(video, function(){
+      var po=$('#sharePlayOverlay'); if(po) po.classList.add('hidden');
+      var ub=$('#shareUnmuteBtn'); if(ub) ub.classList.remove('hidden');
+    }, function(){});
+  };
+}
+function onShareStreamClosed(){
+  state.remoteStream=null;
+  var video=document.getElementById('shareVideo');
+  if(video){
+    try{ video.pause(); }catch(e){}
+    if('srcObject' in video){ try{ video.srcObject=null; }catch(e){} }
+    try{ video.removeAttribute('src'); }catch(e){}
+  }
+  var ub=$('#shareUnmuteBtn'); if(ub) ub.classList.add('hidden');
+  var po=$('#sharePlayOverlay'); if(po) po.classList.add('hidden');
+  if(state.viewMode==='share') switchToLocalView(false);
+}
+function switchToShareView(showToast){
+  state.viewMode='share';
+  var sl=document.getElementById('shareLayer'), vc=document.getElementById('viewCtrl');
+  if(sl) sl.classList.remove('hidden');
+  if(vc) vc.classList.add('hidden');
+  exitHandMode();
+  try{
+    if(state.url){
+      state.pendingUrlBeforeShare=state.url;
+      var ifr=document.getElementById('player');
+      if(ifr) ifr.src='about:blank';
+    }
+  }catch(e){}
+  if(showToast) toast('已切换到房主画面');
+  var b=$('#shareBadge'); if(b) b.classList.remove('hidden');
+}
+function switchToLocalView(showToast){
+  state.viewMode='local';
+  var sl=document.getElementById('shareLayer'), vc=document.getElementById('viewCtrl');
+  if(sl) sl.classList.add('hidden');
+  if(vc) vc.classList.remove('hidden');
+  var video=document.getElementById('shareVideo');
+  if(video){ try{ video.pause(); }catch(e){} }
+  var ub=$('#shareUnmuteBtn'); if(ub) ub.classList.add('hidden');
+  var po=$('#sharePlayOverlay'); if(po) po.classList.add('hidden');
+  try{
+    var u=state.pendingUrlBeforeShare||state.url;
+    if(u){
+      var ifr=document.getElementById('player');
+      if(ifr && (ifr.src==='about:blank'||!ifr.src)) setPlayer(u);
+    }
+    state.pendingUrlBeforeShare=null;
+  }catch(e){}
+  if(showToast) toast('已切换到本地播放');
+  var b=$('#shareBadge'); if(b) b.classList.toggle('hidden', !state.shareActive);
+}
+function updateShareBtn(){
+  var b=$('#shareBtn'); if(!b) return;
+  var cam=$('#camSwitchBtn'), bd=$('#shareBadge');
+  if((!env.canShareScreen&&!env.canShareCamera)||!state.isHost){
+    b.classList.add('hidden');
+    if(cam) cam.classList.add('hidden');
+    if(bd) bd.classList.add('hidden');
+    return;
+  }
+  b.classList.remove('hidden');
+  if(state.shareActive){ b.textContent='停止共享'; b.className='share-btn share-on'; }
+  else if(env.canShareScreen){ b.textContent='共享屏幕'; b.className='share-btn'; }
+  else { b.textContent='共享摄像头'; b.className='share-btn'; }
+  if(cam) cam.classList.toggle('hidden', !(state.shareActive&&state.shareKind==='camera'));
+  if(bd) bd.classList.toggle('hidden', !state.shareActive);
+}
+function shareVideoFullscreen(){
+  var v=document.getElementById('shareVideo'); if(!v) return;
+  try{ if(v.webkitEnterFullscreen){ v.webkitEnterFullscreen(); return; } }catch(e){}
+  try{ if(v.requestFullscreen){ v.requestFullscreen(); return; } }catch(e){}
+  try{ if(v.webkitRequestFullscreen){ v.webkitRequestFullscreen(); return; } }catch(e){}
+  try{ if(v.msRequestFullscreen){ v.msRequestFullscreen(); return; } }catch(e){}
+  var sl=document.getElementById('shareLayer');
+  if(sl&&sl.requestFullscreen){ sl.requestFullscreen(); return; }
+  toast('当前浏览器不支持全屏');
+}
+
+/* ==================== 图片/语音 ==================== */
+function compressImage(file, cb){
+  var r=new FileReader();
+  r.onload=function(){
+    var img=new Image();
+    img.onload=function(){
+      var w=img.width, h=img.height;
+      if(w>MAX_IMG_DIM||h>MAX_IMG_DIM){
+        if(w>h){ h=Math.round(h*MAX_IMG_DIM/w); w=MAX_IMG_DIM; }
+        else { w=Math.round(w*MAX_IMG_DIM/h); h=MAX_IMG_DIM; }
+      }
+      var c=document.createElement('canvas'); c.width=w; c.height=h;
+      var ctx=c.getContext('2d'); ctx.drawImage(img,0,0,w,h);
+      var d;
+      try{ d=c.toDataURL('image/jpeg', IMG_QUALITY); }catch(e){ d=r.result; }
+      cb(d,w,h);
+    };
+    img.onerror=function(){ toast('图片读取失败'); };
+    img.src=r.result;
+  };
+  r.onerror=function(){ toast('图片读取失败'); };
+  r.readAsDataURL(file);
+}
+function sendMediaToRoom(dataUrl, kind, meta, sendFn){
+  var id='m'+Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+  var total=Math.ceil(dataUrl.length/CHUNK_SIZE);
+  sendFn({type:'media-start', id:id, kind:kind, total:total, meta:meta||{}});
+  var idx=0;
+  function nx(){
+    if(idx>=total){ sendFn({type:'media-end', id:id}); return; }
+    var ch=dataUrl.substr(idx*CHUNK_SIZE, CHUNK_SIZE);
+    sendFn({type:'media-chunk', id:id, idx:idx, data:ch});
+    idx++;
+    setTimeout(nx, MEDIA_SEND_INTERVAL);
+  }
+  nx();
+}
+function onMediaStart(d){ pendingMedia.set(d.id, {kind:d.kind, total:d.total, meta:d.meta||{}, chunks:new Array(d.total), received:0, ts:Date.now()}); }
+function onMediaChunk(d){ var m=pendingMedia.get(d.id); if(!m) return; if(m.chunks[d.idx]===undefined){ m.chunks[d.idx]=d.data; m.received++; } }
+function onMediaEnd(d){ var m=pendingMedia.get(d.id); if(!m) return; if(m.received<m.total) return; pendingMedia['delete'](d.id); var full=m.chunks.join(''); handleCompleteMedia(full, m.kind, m.meta, false); }
+function handleCompleteMedia(d, k, meta, self){
+  if(k==='image') pushMessage({kind:'image', nick:meta.nick, ts:meta.ts, dataUrl:d, self:!!self});
+  else if(k==='audio') pushMessage({kind:'audio', nick:meta.nick, ts:meta.ts, dataUrl:d, meta:meta, self:!!self});
+  if(!self) noteUnread();
+}
+function onImagePicked(e){
+  var f=e.target&&e.target.files&&e.target.files[0];
+  e.target.value='';
+  if(!f) return;
+  if(!/^image\//.test(f.type)){ toast('请选择图片'); return; }
+  if(Date.now()-__lastMediaSend<MEDIA_SEND_COOLDOWN){ toast('图片发送太频繁，稍等一下'); return; }
+  __lastMediaSend=Date.now();
+  toast('正在压缩图片…');
+  compressImage(f, function(d,w,h){
+    if(Math.round(d.length*0.75)>MAX_MEDIA_BYTES){ toast('图片太大，请压缩后再发'); return; }
+    var ts=Date.now(), meta={nick:state.nick, ts:ts, w:w, h:h};
+    handleCompleteMedia(d, 'image', meta, true);
+    sendMediaToRoom(d, 'image', meta, sendToRoom);
+  });
+}
+var recorder=null, recStream=null, recChunks=[], recStartTs=0, recTimer=null, recDuration=0, recCancelled=false;
+function startRecording(){
+  if(recorder) return;
+  if(!env.hasUserMedia||!env.hasMediaRecorder){ toast('当前环境不支持录音'); return; }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(function(s){
+    recStream=s; recChunks=[]; recCancelled=false; recDuration=0;
+    var mime='';
+    try{
+      var cands=['audio/webm;codecs=opus','audio/webm','audio/mp4','audio/aac'];
+      for(var i=0;i<cands.length;i++){
+        if(MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(cands[i])){ mime=cands[i]; break; }
+      }
+      recorder=mime?new MediaRecorder(s,{mimeType:mime}):new MediaRecorder(s);
+    }catch(e){
+      try{ recorder=new MediaRecorder(s); }
+      catch(e2){ toast('录音初始化失败'); try{s.getTracks().forEach(function(t){t.stop();});}catch(e3){} recStream=null; return; }
+    }
+    recorder.ondataavailable=function(ev){ if(ev.data&&ev.data.size>0) recChunks.push(ev.data); };
+    recorder.onstop=function(){
+      var dur=recDuration, mimeType=recorder.mimeType||'audio/webm';
+      cleanupRecorder();
+      if(recCancelled) return;
+      var blob;
+      try{ blob=new Blob(recChunks, {type:mimeType}); }catch(e){ toast('录音合成失败'); return; }
+      if(blob.size===0){ toast('录音为空，请重试'); return; }
+      if(blob.size>1.5*1024*1024){ toast('录音太长，请缩短'); return; }
+      var fr=new FileReader();
+      fr.onload=function(){
+        var ts=Date.now(), meta={nick:state.nick, ts:ts, duration:dur, mime:mimeType};
+        handleCompleteMedia(fr.result, 'audio', meta, true);
+        sendMediaToRoom(fr.result, 'audio', meta, sendToRoom);
+      };
+      fr.readAsDataURL(blob);
+    };
+    recStartTs=Date.now();
+    try{ recorder.start(500); }catch(e){ recorder.start(); }
+    var rb=$('#recordingBar'); if(rb) rb.classList.remove('hidden');
+    var mb=$('#micBtn'); if(mb) mb.classList.add('active');
+    updateRecTime();
+    recTimer=setInterval(updateRecTime, 200);
+  }, function(err){
+    if(err&&(err.name==='NotAllowedError'||err.name==='PermissionDeniedError')) toast('麦克风权限被拒绝');
+    else toast('无法录音：'+(err&&err.message||'未知错误'));
+  });
+}
+function updateRecTime(){
+  if(!recorder||recorder.state!=='recording') return;
+  recDuration=(Date.now()-recStartTs)/1000;
+  var t=$('#recTime');
+  if(t){ var s=Math.floor(recDuration); t.textContent=Math.floor(s/60)+':'+pad2(s%60); }
+  if(recDuration>=REC_MAX_DURATION/1000) stopRecording(true);
+}
+function stopRecording(send){ if(!recorder) return; recCancelled=!send; try{ recorder.stop(); }catch(e){} }
+function cleanupRecorder(){
+  if(recTimer){ clearInterval(recTimer); recTimer=null; }
+  var rb=$('#recordingBar'); if(rb) rb.classList.add('hidden');
+  var mb=$('#micBtn'); if(mb) mb.classList.remove('active');
+  if(recStream){ try{ recStream.getTracks().forEach(function(t){t.stop();}); }catch(e){} recStream=null; }
+  recorder=null; recChunks=[];
+}
+
+/* ==================== UI 更新 ==================== */
+function updateUIForRole(){
+  var roleTag=$('#roleTag');
+  if(roleTag){
+    roleTag.textContent=state.isHost?'房主':'访客';
+    roleTag.classList.toggle('guest', !state.isHost);
+  }
+  var ap=$('#applyUrlBtn'), cp=$('#copyUrlBtn'), sb=$('#shareBtn');
+  var pb=$('#pullUrlBtn'), cb2=$('#camSwitchBtn');
+  if(state.isHost){
+    if(ap) ap.classList.remove('hidden');
+    if(cp) cp.classList.add('hidden');
+    if(pb) pb.classList.add('hidden');
+    updateShareBtn();
+  } else {
+    if(ap) ap.classList.add('hidden');
+    if(cp) cp.classList.remove('hidden');
+    if(pb) pb.classList.remove('hidden');
+    if(sb) sb.classList.add('hidden');
+    if(cb2) cb2.classList.add('hidden');
+  }
+  updateUrlTagDisplay();
+}
+function renderMembers(){ var mc=$('#memberCount'); if(mc) mc.textContent=state.members.size+' 人'; }
+
+/* ==================== 视频加载 ==================== */
+function setPlayer(url){
+  var ph=$('#playerPlaceholder'); if(ph) ph.classList.add('hidden');
+  state.url=url;
+  var input=$('#urlEdit'); if(input) input.value=url;
+  updateUrlTagDisplay();
+  updatePresetForUrl(url);
+  resetView();
+  applyPresetTransform();
+  var ifr=$('#player');
+  if(ifr){
+    try{ ifr.setAttribute('referrerpolicy','no-referrer'); }catch(e){}
+    ifr.src='about:blank';
+    setTimeout(function(){ ifr.src=url; }, 30);
+  }
+  iframeReady=false;
+  setTimeout(function(){ iframeReady=true; injectIframeHygiene(); }, 1200);
+  setTimeout(refreshLayout, 100);
+  setTimeout(refreshLayout, 500);
+}
+
+/* ==================== Emoji 面板 ==================== */
+function buildEmojiPanel(){
+  var p=$('#emojiPanel'); if(!p) return;
+  p.innerHTML='';
+  for(var i=0;i<EMOJI_LIST.length;i++){
+    (function(emo){
+      var b=document.createElement('button'); b.type='button'; b.textContent=emo;
+      b.addEventListener('click', function(e){
+        e.preventDefault();
+        var inp=$('#chatInput'); if(!inp) return;
+        var st=inp.selectionStart||0, en=inp.selectionEnd||0, val=inp.value;
+        inp.value=val.slice(0,st)+emo+val.slice(en);
+        var np=st+emo.length;
+        try{ inp.setSelectionRange(np,np); }catch(e2){}
+        inp.focus();
+      }, false);
+      p.appendChild(b);
+    })(EMOJI_LIST[i]);
+  }
+}
+function toggleEmojiPanel(){
+  var p=$('#emojiPanel'); if(!p) return;
+  p.classList.toggle('hidden');
+  var b=$('#emojiBtn'); if(b) b.classList.toggle('active', !p.classList.contains('hidden'));
+}
+function hideEmojiPanel(){
+  var p=$('#emojiPanel'); if(p) p.classList.add('hidden');
+  var b=$('#emojiBtn'); if(b) b.classList.remove('active');
+}
+
+/* ============ 全屏 ============ */
+var pseudoFull=false;
+function fsElement(){ return document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement||null; }
+function enterPseudoFullscreen(){
+  var el=$('#mainWrap'); if(!el) return;
+  pseudoFull=true;
+  el.classList.add('is-fullscreen');
+  try{ document.documentElement.style.overflow='hidden'; }catch(e){}
+  toast('已进入全屏（按 Esc 退出）');
+  setTimeout(refreshLayout, 60);
+  setTimeout(refreshLayout, 300);
+}
+function exitPseudoFullscreen(){
+  var el=$('#mainWrap'); if(!el) return;
+  pseudoFull=false;
+  el.classList.remove('is-fullscreen');
+  try{ document.documentElement.style.overflow=''; }catch(e){}
+  setTimeout(refreshLayout, 60);
+}
+function toggleFullscreen(){
+  var el=$('#mainWrap'); if(!el) return;
+  if(floatState.active) exitFloatMode();
+  if(pseudoFull){ exitPseudoFullscreen(); return; }
+  if(fsElement()){
+    var exit=document.exitFullscreen||document.webkitExitFullscreen||document.mozCancelFullScreen||document.msExitFullscreen;
+    if(exit){ try{ exit.call(document); }catch(e){} }
+    el.classList.remove('is-fullscreen');
+    return;
+  }
+  var req=el.requestFullscreen||el.webkitRequestFullscreen||el.mozRequestFullScreen||el.msRequestFullscreen;
+  if(req){
+    var pr=null;
+    try{ pr=req.call(el); }catch(e){ pr=null; }
+    if(pr&&typeof pr.then==='function'){
+      pr.then(function(){ el.classList.add('is-fullscreen'); setTimeout(refreshLayout,100); },
+              function(){ enterPseudoFullscreen(); });
+    } else { el.classList.add('is-fullscreen'); setTimeout(refreshLayout,100); }
+    return;
+  }
+  enterPseudoFullscreen();
+}
+function bindMousePan(pw){
+  if(!pw||!pw.addEventListener) return;
+  var dragging=false, sx=0, sy=0, stx=0, sty=0;
+  pw.addEventListener('mousedown', function(e){
+    if(!handMode||e.button!==0) return;
+    dragging=true; sx=e.clientX; sy=e.clientY; stx=view.tx; sty=view.ty;
+    if(e.preventDefault) e.preventDefault();
+  }, false);
+  document.addEventListener('mousemove', function(e){
+    if(!dragging||!handMode) return;
+    view.tx=stx+(e.clientX-sx); view.ty=sty+(e.clientY-sy);
+    applyManualTransform();
+  }, false);
+  document.addEventListener('mouseup', function(){ dragging=false; }, false);
+  pw.addEventListener('dblclick', function(e){ if(!handMode) return; resetView(); if(e.preventDefault) e.preventDefault(); }, false);
+}
+
+/* ==================== 创建/加入房间 ==================== */
+function doCreateRoom(url, nick){
+  resetRuntimeState();
+  state.identityId = genIdentityId();
+  localStorage.setItem('tvparty_nick', nick);
+  state.nick=nick;
+  state.url=url;
+  state.isHost=true;
+  state.rejoined=false;
+  hostRetries=0;
+  setLobbyBusy(true, '正在创建房间…');
+  startHost();
+}
+function createRoom(){ withPeerLib(createRoomNow); }
+function createRoomNow(){
+  if(typeof Peer==='undefined'){ showMsg('通信组件未就绪，请稍后重试', true); return; }
+  if(!env.hasWebRTC){ showMsg('浏览器不支持 WebRTC', true); return; }
+  var ni=$('#nickInput');
+  var nick=((ni&&ni.value.trim())||'房主').slice(0,12);
+  var ui=$('#urlInput');
+  var raw=ui?ui.value:'';
+  var parsed=parseVideoInput(raw);
+  if(parsed.error){ showMsg('解析失败：'+parsed.error, true); return; }
+  if(parsed.source === 'b23-pending'){
+    showMsg('正在展开 B站短链…');
+    setLobbyBusy(true, '正在展开 B站短链…');
+    resolveB23Url(parsed.b23Url, function(err, bv){
+      if(err || !bv){ setLobbyBusy(false); showMsg('b23.tv 短链展开失败，请打开链接后从浏览器地址栏复制完整地址（含 BV 号）', true); return; }
+      var finalUrl = 'https://player.bilibili.com/player.html?bvid='+bv+'&page=1&high_quality=1&danmaku=0&autoplay=0';
+      doCreateRoom(finalUrl, nick);
+    });
+    return;
+  }
+  doCreateRoom(parsed.url, nick);
+}
+function startHost(){
+  if(!/^\d{6}$/.test(String(state.roomId||''))) state.roomId=randomRoomId();
+  state.isHost=true;
+  var peer=new Peer(hostPeerIdForRoom(state.roomId), PEER_OPTS);
+  state.peer=peer;
+  peer.on('open', function(){ hostRetries=0; state.members.set(peer.id, state.nick); enterRoom(); });
+  peer.on('connection', onHostConnection);
+  peer.on('error', function(err){
+    if(err&&err.type==='unavailable-id'&&hostRetries<10){
+      hostRetries++;
+      try{ peer.destroy(); }catch(e){}
+      var delay=Math.min(3000, 700+hostRetries*400);
+      if(hostRetries<=3) toast('房间地址还在释放中，正在重试('+hostRetries+')…');
+      setTimeout(startHost, delay);
+      return;
+    }
+    hideLoading();
+    setLobbyBusy(false);
+    showMsg('连接失败：'+((err&&(err.type||err.message))||'未知错误'), true);
+    state.isHost=false;
+    if(!state.connected){ clearSession(); showScreen('lobby'); }
+  });
+  peer.on('disconnected', function(){ try{ peer.reconnect(); }catch(e){} });
+}
+function joinRoom(){ withPeerLib(joinRoomNow); }
+function joinRoomNow(){
+  if(typeof Peer==='undefined'){ showMsg('通信组件未就绪，请稍后重试', true); return; }
+  if(!env.hasWebRTC){ showMsg('浏览器不支持 WebRTC', true); return; }
+  var ni=$('#nickInput');
+  var nick=((ni&&ni.value.trim())||'访客').slice(0,12);
+  var ri=$('#roomInput');
+  var roomId=ri?ri.value.trim():'';
+  if(!/^\d{6}$/.test(roomId)){ showMsg('请输入 6 位数字房间号', true); return; }
+  resetRuntimeState();
+  state.identityId = genIdentityId();
+  localStorage.setItem('tvparty_nick', nick);
+  state.nick=nick;
+  state.roomId=roomId;
+  state.isHost=false;
+  setLobbyBusy(true, '正在连接房间 '+roomId+' …');
+  startGuestSession(nick, roomId, false);
+}
+function startGuestSession(nick, roomId, isReconnect){
+  var peer=new Peer(PEER_OPTS);
+  state.peer=peer;
+  var settled=false;
+  var timer=null;
+  function clearT(){ if(timer){ clearTimeout(timer); timer=null; } }
+  function fail(m){
+    if(settled) return;
+    settled=true; clearT();
+    if(isReconnect) return;
+    setLobbyBusy(false); hideLoading();
+    showMsg(m, true);
+    clearSession();
+    try{ peer.destroy(); }catch(e){}
+    if(state.peer===peer) state.peer=null;
+    showScreen('lobby');
+  }
+  if(!isReconnect){ timer=setTimeout(function(){ fail('连接超时，请确认房号是否正确'); }, 15000); }
+  peer.on('open', function(){
+    var conn=peer.connect(hostPeerIdForRoom(roomId), {reliable:true});
+    state.hostConn=conn;
+    conn.on('open', function(){
+      try{ conn.send({type:'hello', nick:nick, identityId:state.identityId}); }catch(e){}
+    });
+    conn.on('data', function(data){
+      if(data&&data.type==='welcome'){
+        if(settled) return;
+        settled=true; clearT();
+        state.url=data.url||'';
+        state.shareActive=!!data.shareActive;
+        state.shareKind=data.shareKind||'screen';
+        state.members=new Map((data.members||[]).map(function(m){ return [m.id,m.nick]; }));
+        setLobbyBusy(false); hideLoading();
+        if(isReconnect || state.connected){ onReconnected(); }
+        else { enterRoom(); }
+      }
+      handleGuestData(data);
+    });
+    conn.on('close', function(){ if(state.connected) onHostLost(); });
+  });
+  peer.on('call', function(call){
+    try{ call.answer(); }catch(e){}
+    call.on('stream', function(s){ onShareStreamReceived(s); });
+    call.on('close', function(){ onShareStreamClosed(); });
+    call.on('error', function(){ onShareStreamClosed(); });
+  });
+  peer.on('error', function(err){
+    var t=err&&err.type;
+    if(settled){
+      if(state.connected && (t==='peer-unavailable'||t==='network'||t==='disconnected')) onHostLost();
+      return;
+    }
+    if(t==='peer-unavailable') fail('房间不存在，或房主已离线');
+    else fail('连接失败：'+(t||(err&&err.message)||'未知错误'));
+  });
+  peer.on('disconnected', function(){ try{ peer.reconnect(); }catch(e){} });
+}
+function enterRoom(){
+  state.connected=true;
+  state.reconnecting=false;
+  if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
+  showScreen('room');
+  hideLoading();
+  var rt=$('#roomIdText'); if(rt) rt.textContent=state.roomId;
+  updateUIForRole();
+  if(chatPanelEl) chatPanelEl.classList.remove('collapsed');
+  unreadCount=0;
+  updateUnreadBadge();
+  resetView();
+  hydrateFromLocalHistory();
+  if(state.url) setPlayer(state.url);
+  else if(pendingInitialUrl){ state.url=pendingInitialUrl; setPlayer(pendingInitialUrl); }
+  pendingInitialUrl='';
+  syncUrlHash();
+  saveSession();
+  if(state.isHost) startIframePoll();
+  renderMembers();
+  addSystem(state.isHost
+    ? (state.rejoined?'已恢复房主身份，房间号不变，等大家回来即可～':'房间已创建，把房号发给朋友，一起看吧～')
+    : '已加入房间，你是访客');
+  state.rejoined=false;
+  startHeartbeat();
+  setTimeout(refreshLayout, 30);
+  setTimeout(refreshLayout, 200);
+  var ci=$('#chatInput');
+  if(ci&&window.innerWidth>720) ci.focus();
+  setTimeout(function(){ sendLocalHistoryToHost(); }, 800);
+}
+function resetRuntimeState(){
+  state.connected=false;
+  state.reconnecting=false;
+  reconnectAttempts=0;
+  if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
+  state.hostConn=null;
+  state.conns.forEach(function(c){ try{c.close();}catch(e){} });
+  state.conns.clear();
+  state.members.clear();
+  state.identityToPeer.clear();
+  state.replacedPeers.clear();
+  for(var k in state){
+    if(k.indexOf('__seen_')===0){ try{ delete state[k]; }catch(e){ state[k]=undefined; } }
+  }
+  state.clientHistorySent=false;
+  if(state.shareStream){ try{ state.shareStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} state.shareStream=null; }
+  state.mediaCalls.forEach(function(c){ try{c.close();}catch(e){} });
+  state.mediaCalls.clear();
+  state.shareActive=false;
+  state.remoteStream=null;
+  state.viewMode='local';
+  state.shareKind='screen';
+  state.shareFacing='user';
+  state.pendingUrlBeforeShare=null;
+  pendingInitialUrl='';
+  lastAutoUrl='';
+  stopIframePoll();
+  if(state.peer){ try{ state.peer.destroy(); }catch(e){} state.peer=null; }
+  state.roomId='';
+  state.url='';
+  unreadCount=0;
+  if(unreadBadgeEl) updateUnreadBadge();
+  if(chatPanelEl) chatPanelEl.classList.remove('collapsed');
+  pendingMedia.clear();
+  sendQueue.length=0;
+  sendProcessing=false;
+  stopHeartbeat();
+  allMessages=[];
+  displayedCount=CHAT_INITIAL;
+  chatAutoStick=true;
+  pendingChoice=null;
+  iframeReady=false;
+  __lastMediaSend=0;
+  resetView();
+  if(floatState.active) exitFloatMode();
+  hideLoading();
+}
+function applyUrlChange(){
+  if(!state.isHost) return;
+  var input=$('#urlEdit');
+  var raw=input?input.value.trim():'';
+  if(!raw){ toast('请输入链接'); return; }
+  var parsed=parseVideoInput(raw);
+  if(parsed.error){ toast('解析失败：'+parsed.error); return; }
+  if(parsed.source === 'b23-pending'){
+    toast('正在展开 B站短链…');
+    resolveB23Url(parsed.b23Url, function(err, bv){
+      if(err || !bv){ toast('b23.tv 短链展开失败，请手动打开复制完整地址'); return; }
+      var finalUrl = 'https://player.bilibili.com/player.html?bvid='+bv+'&page=1&high_quality=1&danmaku=0&autoplay=0';
+      doApplyUrl(finalUrl);
+    });
+    return;
+  }
+  doApplyUrl(parsed.url);
+}
+function doApplyUrl(url){
+  if(url===state.url){ toast('链接没有变化'); return; }
+  state.url=url;
+  var input=$('#urlEdit'); if(input) input.value=url;
+  setPlayer(url);
+  syncUrlHash();
+  saveSession();
+  broadcast({type:'url', url:url, by:state.nick});
+  addSystem('已切换视频源');
+  toast('已同步给房间内所有人');
+}
+function copyText(text, okMsg, failMsg){
+  var ok=function(){ toast(okMsg||'已复制'); };
+  var bad=function(){ toast(failMsg||('复制失败，请手动复制：'+text)); };
+  if(navigator.clipboard&&navigator.clipboard.writeText&&env.isSecure&&!env.isFile){
+    try{ navigator.clipboard.writeText(text).then(ok, function(){ legacyCopyRaw(text, ok, bad); }); return; }catch(e){}
+  }
+  legacyCopyRaw(text, ok, bad);
+}
+function legacyCopyRaw(text, ok, bad){
+  var ta=null, done=false;
+  try{
+    ta=document.createElement('textarea');
+    ta.value=text;
+    ta.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;';
+    ta.setAttribute('readonly','');
+    document.body.appendChild(ta);
+    ta.select();
+    try{ ta.setSelectionRange(0, ta.value.length); }catch(e){}
+    done=document.execCommand('copy');
+  }catch(e){ done=false; }
+  try{ if(ta&&ta.parentNode) ta.parentNode.removeChild(ta); }catch(e){}
+  if(done) ok(); else bad();
+}
+function copyRoomId(){
+  var text=state.roomId||'';
+  var link='';
+  try{ link=buildInviteLink(); }catch(e){}
+  if(env.isFile||!/^https?:\/\//i.test(link)){
+    copyText(text, '房间号已复制：'+text+'（本地文件打开时，请把房间号发给朋友）', '复制失败，请手动记录房间号：'+text);
+    return;
+  }
+  copyText(link, '邀请链接已复制，发给朋友即可直接进房：'+link, '复制失败，请手动复制这段链接：'+link);
+}
+
+/* ==================== 清理 ==================== */
+function teardown(){
+  state.connected=false;
+  state.reconnecting=false;
+  reconnectAttempts=0;
+  if(reconnectTimer){ clearTimeout(reconnectTimer); reconnectTimer=null; }
+  exitHandMode();
+  if(floatState.active) exitFloatMode();
+  stopRecording(false);
+  if(state.shareStream){ try{ state.shareStream.getTracks().forEach(function(t){ t.stop(); }); }catch(e){} state.shareStream=null; }
+  state.mediaCalls.forEach(function(c){ try{c.close();}catch(e){} });
+  state.mediaCalls.clear();
+  if(state.hostConn){ try{ state.hostConn.close(); }catch(e){} state.hostConn=null; }
+  state.conns.forEach(function(c){ try{c.close();}catch(e){} });
+  state.conns.clear();
+  state.identityToPeer.clear();
+  state.replacedPeers.clear();
+  if(state.peer){ try{ state.peer.destroy(); }catch(e){} state.peer=null; }
+  state.isHost=false;
+  state.url='';
+  state.roomId='';
+  state.shareKind='screen';
+  state.pendingUrlBeforeShare=null;
+  state.clientHistorySent=false;
+  pendingInitialUrl='';
+  lastAutoUrl='';
+  stopIframePoll();
+  clearUrlHash();
+  clearSession();
+  var ifr=$('#player'); if(ifr) ifr.src='about:blank';
+  var box=getMessagesEl(); if(box) box.innerHTML='';
+  allMessages=[];
+  displayedCount=CHAT_INITIAL;
+  pendingChoice=null;
+  stopHeartbeat();
+  resetView();
+  hideLoading();
+  var ci=$('#chatInput'); if(ci) ci.disabled=false;
+}
+
+/* ==================== 自动回到原房间 ==================== */
+function autoEnterIfPossible(hashRoom){
+  if(state.connected) return;
+  var sess=loadSession();
+
+  if(sess && sess.isHost && (!hashRoom || sess.roomId===hashRoom)){
+    state.nick=String(sess.nick || localStorage.getItem('tvparty_nick') || '房主').slice(0,12);
+    var ni=$('#nickInput'); if(ni) ni.value=state.nick;
+    state.roomId=sess.roomId;
+    state.isHost=true;
+    state.url=sess.url||'';
+    state.identityId = sess.identityId || genIdentityId();
+    state.rejoined=true;
+    hostRetries=0;
+    showMsg('正在恢复房间 '+sess.roomId+' …');
+    ensurePeerLib(function(ok){
+      if(!ok){ showMsg('通信组件加载失败，请检查网络后重试', true); return; }
+      startHost();
+    });
+    return;
+  }
+
+  var room = hashRoom || (sess? sess.roomId : '');
+  if(!/^\d{6}$/.test(room)) return;
+  var nick = String((sess && sess.roomId===room && sess.nick) || localStorage.getItem('tvparty_nick') || '访客').slice(0,12);
+  var ni2 = $('#nickInput'); if(ni2) ni2.value = nick;
+  state.nick = nick;
+  state.roomId = room;
+  state.isHost = false;
+  state.identityId = (sess && sess.roomId===room && sess.identityId) || genIdentityId();
+  showMsg('正在进入房间 '+room+' …');
+  ensurePeerLib(function(ok){
+    if(!ok){ showMsg('通信组件加载失败，请检查网络后重试', true); return; }
+    startGuestSession(nick, room, false);
+  });
+}
+
+/* ==================== 初始化 ==================== */
+function initUI(){
+  chatPanelEl=$('#chatPanel');
+  unreadBadgeEl=$('#unreadBadge');
+  viewLayer=$('#viewLayer');
+  viewportLayer=$('#viewportLayer');
+  playerOuterEl=$('#playerOuter');
+  mainWrapEl=$('#mainWrap');
+  zoomLabel=$('#zoomLabel');
+
+  /* 初始兜底：确保 loading 是隐藏的 */
+  hideLoading();
+
+  safeBind('#chatHead', 'click', toggleChat);
+  safeBind('#lightboxClose', 'click', closeLightbox);
+  safeBind('#lightbox', 'click', function(e){ if(e.target&&e.target.id==='lightbox') closeLightbox(); });
+
+  try{
+    var tabs=document.querySelectorAll('.tab');
+    for(var i=0;i<tabs.length;i++){
+      (function(btn){
+        btn.addEventListener('click', function(){
+          var allTabs=document.querySelectorAll('.tab');
+          for(var j=0;j<allTabs.length;j++) allTabs[j].classList.toggle('active', allTabs[j]===btn);
+          var cp=$('#createPane'), jp=$('#joinPane');
+          if(cp) cp.classList.toggle('hidden', btn.getAttribute('data-tab')!=='create');
+          if(jp) jp.classList.toggle('hidden', btn.getAttribute('data-tab')!=='join');
+          showMsg('');
+        }, false);
+      })(tabs[i]);
+    }
+  }catch(e){}
+
+  var savedNick=localStorage.getItem('tvparty_nick');
+  var ni=$('#nickInput'); if(savedNick&&ni) ni.value=savedNick;
+
+  var hp=hashParams();
+  var hashRoom=String(hp.room||'').trim();
+  var hashValid=/^\d{6}$/.test(hashRoom);
+  if(hashValid){
+    var joinTab=document.querySelector('.tab[data-tab="join"]');
+    if(joinTab) joinTab.click();
+    var ri=$('#roomInput'); if(ri) ri.value=hashRoom;
+  }
+  var hv=hp.v||'';
+  if(hv){
+    var pv=parseVideoInput(hv);
+    if(!pv.error&&pv.url) pendingInitialUrl=pv.url;
+  }
+  setTimeout(function(){
+    try{ autoEnterIfPossible(hashValid?hashRoom:''); }
+    catch(e){ console.error('[autoEnter] failed', e); hideLoading(); }
+  }, 350);
+
+  safeBind('#createBtn', 'click', createRoom);
+  safeBind('#joinBtn', 'click', joinRoom);
+  safeBind('#roomInput', 'keydown', function(e){ if(e.key==='Enter'||e.keyCode===13) joinRoom(); });
+
+  safeBind('#zoomInBtn', 'click', function(){ zoomBy(1.2); });
+  safeBind('#zoomOutBtn', 'click', function(){ zoomBy(1/1.2); });
+  safeBind('#resetViewBtn', 'click', resetView);
+  safeBind('#handModeBtn', 'click', toggleHandMode);
+  safeBind('#fsBtn', 'click', toggleFullscreen);
+  safeBind('#floatModeBtn', 'click', toggleFloatMode);
+
+  safeBind('#applyUrlBtn', 'click', applyUrlChange);
+  safeBind('#copyUrlBtn', 'click', function(){
+    var u=state.url;
+    if(!u){ toast('暂无链接'); return; }
+    copyText(u, '链接已复制', '复制失败，请手动复制：'+u);
+  });
+  safeBind('#pullUrlBtn', 'click', function(){
+    if(state.isHost){ trySyncFromIframe(false); toast('已尝试读取页面地址'); return; }
+    if(!state.hostConn||!state.hostConn.open){ toast('还没连上房主'); return; }
+    safeSend(state.hostConn, {type:'url-request'});
+    toast('已向房主请求当前链接…');
+  });
+  safeBind('#camSwitchBtn', 'click', switchCameraFacing);
+  safeBind('#shareFsBtn', 'click', shareVideoFullscreen);
+
+  safeBind('#shareBtn', 'click', startShare);
+  safeBind('#shareBackBtn', 'click', function(){ switchToLocalView(true); });
+  safeBind('#shareUnmuteBtn', 'click', function(){
+    var v=document.getElementById('shareVideo');
+    if(v){
+      v.muted=false;
+      try{ v.volume=1; }catch(e){}
+      safeVideoPlay(v, function(){}, function(){});
+      var ub=$('#shareUnmuteBtn'); if(ub) ub.classList.add('hidden');
+    }
+  });
+  safeBind('#sharePlayBtn', 'click', function(){
+    var v=document.getElementById('shareVideo');
+    if(v){
+      safeVideoPlay(v, function(){
+        var po=$('#sharePlayOverlay'); if(po) po.classList.add('hidden');
+        var ub=$('#shareUnmuteBtn'); if(ub) ub.classList.remove('hidden');
+      }, function(){});
+    }
+  });
+
+  safeBind('#emojiBtn', 'click', function(e){ e.preventDefault(); toggleEmojiPanel(); });
+  safeBind('#imgBtn', 'click', function(e){ e.preventDefault(); var f=$('#imgFile'); if(f) f.click(); });
+  safeBind('#imgFile', 'change', onImagePicked);
+  if(env.hasMediaRecorder){
+    var mb=$('#micBtn');
+    if(mb){ mb.classList.remove('hidden'); mb.addEventListener('click', function(e){ e.preventDefault(); startRecording(); }, false); }
+  }
+  safeBind('#recStop', 'click', function(){ stopRecording(true); });
+  safeBind('#recCancel', 'click', function(){ stopRecording(false); });
+  buildEmojiPanel();
+
+  safeBind('#copyBtn', 'click', copyRoomId);
+  safeBind('#leaveBtn', 'click', function(){
+    var tip=state.isHost?'你是房主，退出后房间会关闭（刷新不再自动回来），确定吗？':'确定要退出房间吗？';
+    if(!window.confirm(tip)) return;
+    teardown();
+    showScreen('lobby');
+    showMsg('');
+  });
+
+  safeBind('#chatForm', 'submit', function(e){ e.preventDefault(); sendChat(); return false; });
+  bindMessagesScroll();
+  bindUrlViewClick();
+
+  var pw=$('#playerWrap');
+  if(pw){
+    var passiveOpt=false;
+    try{
+      var opts=Object.defineProperty({}, 'passive', { get: function(){ passiveOpt={passive:false}; return false; } });
+      window.addEventListener('test', null, opts);
+      window.removeEventListener('test', null, opts);
+    }catch(e){ passiveOpt=false; }
+    pw.addEventListener('touchstart', onTouchStart, passiveOpt||false);
+    pw.addEventListener('touchmove', onTouchMove, passiveOpt||false);
+    pw.addEventListener('touchend', onTouchEnd, false);
+    pw.addEventListener('touchcancel', onTouchEnd, false);
+    pw.addEventListener('wheel', function(e){ if(!handMode) return; e.preventDefault(); zoomBy(e.deltaY>0?0.9:1.1); }, passiveOpt||false);
+    bindMousePan(pw);
+  }
+
+  var ifr=$('#player');
+  if(ifr){
+    ifr.addEventListener('load', function(){
+      setTimeout(refreshLayout, 60);
+      setTimeout(refreshLayout, 400);
+      injectIframeHygiene();
+      if(!iframeReady){ iframeReady=true; return; }
+      trySyncFromIframe(false);
+    }, false);
+  }
+
+  document.addEventListener('keydown', function(e){
+    var tag=(e.target&&e.target.tagName)||'';
+    if(tag==='INPUT'||tag==='TEXTAREA') return;
+    if((e.key==='f'||e.key==='F'||e.keyCode===70)&&state.connected){ e.preventDefault(); toggleFullscreen(); }
+    if((e.key==='p'||e.key==='P'||e.keyCode===80)&&state.connected){ e.preventDefault(); toggleFloatMode(); }
+    if(e.key==='Escape'||e.keyCode===27){
+      if(floatState.active){ exitFloatMode(); return; }
+      if(handMode) exitHandMode();
+      if(pseudoFull) exitPseudoFullscreen();
+    }
+  }, false);
+
+  var ui=$('#urlInput'), pp=$('#parsePreview');
+  if(ui&&pp){
+    var onInput=function(){
+      var v=ui.value.trim();
+      if(!v){ pp.classList.add('hidden'); pp.innerHTML=''; return; }
+      renderParsePreview(pp, parseVideoInput(v));
+    };
+    ui.addEventListener('input', onInput, false);
+    ui.addEventListener('paste', function(){ setTimeout(onInput, 0); }, false);
+    ui.addEventListener('change', onInput, false);
+  }
+
+  updateUIForRole();
+  bindEmbedMessageSync();
+  var fsEvents=['fullscreenchange','webkitfullscreenchange','mozfullscreenchange','MSFullscreenChange'];
+  for(var fi=0;fi<fsEvents.length;fi++){
+    document.addEventListener(fsEvents[fi], function(){
+      var on=!!(document.fullscreenElement||document.webkitFullscreenElement||document.mozFullScreenElement||document.msFullscreenElement);
+      if(mainWrapEl) mainWrapEl.classList.toggle('is-fullscreen', on);
+      setTimeout(refreshLayout, 60);
+      setTimeout(refreshLayout, 300);
+    }, false);
+  }
+
+  document.addEventListener('visibilitychange', function(){
+    if(document.visibilityState !== 'visible') return;
+    renewSession();
+
+    if(state.isHost){
+      if(state.peer && state.peer.disconnected){
+        try{ state.peer.reconnect(); }catch(e){}
+      }
+      if(!state.connected && /^\d{6}$/.test(String(state.roomId||''))){
+        if(state.peer){ try{ state.peer.destroy(); }catch(e){} state.peer=null; }
+        hostRetries = 0;
+        startHost();
+      }
+    } else if(state.connected){
+      if(state.hostConn && !state.hostConn.open){
+        onHostLost();
+      } else if(state.hostConn && state.hostConn.open){
+        try{ state.hostConn.send({type:'ping', ts:Date.now()}); }catch(e){ onHostLost(); }
+      }
+    }
+  }, false);
+
+  ensurePeerLib(function(ok){
+    if(!ok) showMsg('通信组件加载失败：当前网络可能拦截了 CDN。点「创建房间」会重试。', true);
+  });
+}
+
+/* ==================== 环境条 ==================== */
+function showEnvBar(){
+  var bar=$('#envBar'); if(!bar) return;
+  var msgs=[];
+  if(!env.isSecure){ bar.classList.add('danger'); bar.textContent='⚠️ 当前非 HTTPS 环境，部分浏览器会禁用 WebRTC，聊天可能无法连接'; bar.classList.remove('hidden'); return; }
+  if(!env.hasWebRTC){ bar.classList.add('danger'); bar.textContent='⚠️ 当前浏览器不支持 WebRTC，无法与房间内其他人通信'; bar.classList.remove('hidden'); return; }
+  if(env.isWechat) msgs.push('微信内置浏览器：如遇连接不稳定，建议点右上角"在浏览器打开"');
+  if(!env.canShareScreen&&env.canShareCamera) msgs.push('本浏览器不支持屏幕共享，已自动改用摄像头共享');
+  else if(!env.canShareScreen&&!env.canShareCamera) msgs.push('当前环境不支持共享屏幕/摄像头');
+  if(!env.hasMediaRecorder) msgs.push('当前环境不支持语音消息');
+  if(env.isFile) msgs.push('本地文件方式打开：功能可用，放到 https 上再分享给朋友更稳');
+  if(msgs.length>0){ bar.textContent='ℹ️ '+msgs.join('；'); bar.classList.remove('hidden'); setTimeout(function(){ bar.classList.add('hidden'); }, 6500); }
+}
+
+/* ==================== 启动 ==================== */
+function boot(){
+  try{ initUI(); }catch(e){ console.error('initUI failed:', e); }
+  try{ bindViewportEvents(); }catch(e){}
+  try{ refreshLayout(); }catch(e){}
+  try{ showEnvBar(); }catch(e){}
+  try{ hideLoading(); }catch(e){}
+  setTimeout(function(){ try{ refreshLayout(); }catch(e){} }, 100);
+  setTimeout(function(){ try{ refreshLayout(); }catch(e){} }, 400);
+  setTimeout(function(){ try{ refreshLayout(); }catch(e){} }, 1000);
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', boot, false);
+else boot();
+
+window.addEventListener('beforeunload', function(){ try{ if(state.isHost && state.roomId) saveSession(); }catch(e){} }, false);
+
+})();
+</script>
+</body>
+</html>
